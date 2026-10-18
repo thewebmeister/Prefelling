@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre-felling Reports</title>
+<meta name="description" content="Enter forest stock survey data and print Stock Chart, Proposed Yield, Stock Summary and Yield Summary reports. Works offline.">
+<meta name="theme-color" content="#1f5d3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pre-felling">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style id="pageStyle">@page { size: A4 landscape; margin: 0; }</style>
+<style>
+:root{
+  --green:#1f5d3a; --green2:#2e7d4f; --green-l:#e8f3ec; --bg:#f4f6f5; --line:#d5dcd8;
+  --text:#1d2521; --rfont:Aptos,"Aptos Display","Aptos Narrow",Calibri,"Segoe UI",Arial,sans-serif; --muted:#66736c; --red:#b3261e; --red-l:#fdecea; --amber:#8a5a00; --amber-l:#fff4db;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Aptos,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+header.app{background:var(--green);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header.app h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
+header.app .sub{opacity:.8;font-size:12px}
+header.app .spacer{flex:1}
+nav.tabs{display:flex;gap:4px;background:var(--green);padding:0 16px}
+nav.tabs button{background:transparent;border:0;color:#cfe5d7;padding:10px 16px;font-size:14px;cursor:pointer;border-radius:8px 8px 0 0;font-weight:500}
+nav.tabs button.active{background:var(--bg);color:var(--green)}
+main{padding:18px 20px;max-width:1500px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 12px;color:var(--green);display:flex;align-items:center;gap:8px}
+.card h2 .count{font-weight:400;color:var(--muted);font-size:13px}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+input[type=text],input[type=number],select,textarea{font:inherit;padding:7px 9px;border:1px solid #c3ccc7;border-radius:6px;background:#fff;color:var(--text);width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid #7fb897;outline-offset:0;border-color:#7fb897}
+input[readonly]{background:#f3f5f4;color:#44504a}
+input.othersEdit{background:#fff;color:var(--text);border:2px solid var(--green2);box-shadow:0 0 0 3px #d9eddf}
+.btn{font:inherit;border:1px solid #b9c4be;background:#fff;color:var(--text);padding:7px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#f0f4f2}
+.btn.primary{background:var(--green2);border-color:var(--green2);color:#fff}
+.btn.primary:hover{background:var(--green)}
+.btn.danger{color:var(--red);border-color:#e3b7b3}
+.btn.danger:hover{background:var(--red-l)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn.light{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
+.btn.light:hover{background:rgba(255,255,255,.22)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar .spacer{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+/* entry form */
+.entry{display:grid;grid-template-columns:110px minmax(210px,1.6fr) minmax(130px,1fr) 100px 190px 90px auto;gap:10px;align-items:end}
+@media(max-width:1100px){.entry{grid-template-columns:repeat(3,1fr)}}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;user-select:none}
+.chk input{width:17px;height:17px;accent-color:var(--green2);cursor:pointer}
+.diamf{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+.diamrow{display:flex;gap:8px;align-items:center}
+.diamrow input[type=text]{flex:1;min-width:0}
+.diamrow input:disabled{background:#eef3ef;color:var(--green2);font-weight:700}
+.plusbox{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--ink,#1d2a22);border:1px solid #c9d6cd;border-radius:6px;padding:7px 9px;background:#fff;cursor:pointer;user-select:none}
+.plusbox input{width:17px;height:17px;accent-color:var(--green2);cursor:pointer;margin:0}
+.plusbox.on{background:#e3f1e7;border-color:var(--green2)}
+.tag.green{background:#e3f1e7;color:#1f5d3a}
+.tag.blue{background:#e6eefb;color:#1d4f9a}
+.spform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spform label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+.spform .full{grid-column:1 / -1}
+.spform .err{grid-column:1 / -1;color:#b3261e;font-size:13px;font-weight:600}
+.savednote{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#1f5d3a;background:#e3f1e7;border-radius:12px;padding:3px 10px}
+.yieldall{background:var(--green-l);border:1px solid #bfdcc9;padding:7px 12px;border-radius:6px;font-weight:600;color:var(--green)}
+/* combo */
+.combo{position:relative}
+.combo input{padding-right:30px}
+.combo .arrow{position:absolute;right:1px;top:1px;bottom:1px;width:28px;border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:12px}
+.combo ul{position:absolute;z-index:50;left:0;right:0;top:100%;margin:2px 0 0;padding:4px 0;list-style:none;background:#fff;border:1px solid #b9c4be;border-radius:6px;max-height:280px;overflow:auto;box-shadow:0 6px 20px rgba(0,0,0,.12);display:none}
+.combo ul.open{display:block}
+.combo li{padding:6px 10px;cursor:pointer;display:flex;gap:8px;color:var(--text)}
+.combo li b{min-width:46px;color:var(--green)}
+.combo li span.g{margin-left:auto;color:var(--muted);font-size:12px}
+.combo li.hi{background:var(--green-l)}
+.combo li.none{color:var(--muted);cursor:default}
+.combo li .via{color:var(--muted);font-size:12px;font-style:italic}
+.combo li.others{position:sticky;bottom:-4px;background:#f3f8f4;border-top:1px solid #d5e2d9;color:var(--green);font-weight:700;margin-top:2px}
+.combo li.others.hi{background:#d9eddf}
+.otherspanel{grid-column:1 / -1;margin-top:4px;border:2px solid var(--green2);border-radius:8px;background:#f6fbf7;padding:12px 14px}
+.otherspanel .ophead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;color:var(--green)}
+.otherspanel .ophead .btn{margin-left:auto}
+.otherspanel .ogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.otherspanel #oMsg{margin-top:8px;font-size:13px}
+.otherspanel #oMsg.err{color:#b3261e;font-weight:600}
+.otherspanel #oMsg .btn{margin-left:6px}
+/* data table */
+.tablewrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:8px}
+table.data{border-collapse:collapse;width:100%;font-size:13px}
+table.data th{position:sticky;top:0;background:#eef2f0;text-align:left;font-weight:600;padding:8px;border-bottom:1px solid var(--line);z-index:1;white-space:nowrap}
+table.data td{padding:5px 8px;border-bottom:1px solid #edf0ee;vertical-align:middle}
+table.data tr:hover td{background:#fafcfb}
+table.data tr.err td{background:var(--red-l)}
+table.data tr.warn td{background:var(--amber-l)}
+table.data tr.editing td{background:#e3f0ff}
+table.data td.num,table.data th.num{text-align:right}
+table.data td.c,table.data th.c{text-align:center}
+table.data input[type=text],table.data input[type=number]{padding:4px 6px}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.tag.red{background:var(--red-l);color:var(--red)}
+.tag.amber{background:var(--amber-l);color:var(--amber)}
+.warnbox{border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;border:1px solid}
+.warnbox.err{background:var(--red-l);border-color:#efc2bd;color:#7a1c16}
+.warnbox.warn{background:var(--amber-l);border-color:#f0d9a2;color:#6b4600}
+.warnbox.ok{background:var(--green-l);border-color:#bfdcc9;color:var(--green)}
+.warnbox ul{margin:4px 0 0 18px;padding:0}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:#f6f8f7;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:110px}
+.stat b{display:block;font-size:18px;color:var(--green)}
+.stat span{font-size:12px;color:var(--muted)}
+/* reports */
+.rtabs{display:flex;gap:6px;flex-wrap:wrap}
+.rtabs button{font:inherit;border:1px solid #b9c4be;background:#fff;padding:7px 14px;border-radius:20px;cursor:pointer}
+.rtabs button.active{background:var(--green2);border-color:var(--green2);color:#fff}
+.paperwrap{background:#8d9892;padding:24px;border-radius:10px;overflow:auto}
+.page{background:#fff;margin:0 auto 18px;box-shadow:0 4px 18px rgba(0,0,0,.25);position:relative;overflow:hidden}
+.page:last-child{margin-bottom:0}
+.page .pfoot{position:absolute;right:12mm;bottom:7mm;font-family:var(--rfont);font-style:italic;font-weight:700;font-size:8.5pt;color:#000}
+/* ---- printed report styles (shared by preview and print) ---- */
+.report{font-family:var(--rfont);color:#000;font-size:10pt;line-height:1.25}
+.report .rtitle{text-align:center;font-weight:700;font-size:13.5pt;line-height:1.35;padding-bottom:8px}
+.report table.rt{width:100%;border-collapse:collapse;table-layout:fixed}
+.report table.rt th{font-weight:700;font-style:italic;font-size:10.5pt;text-align:center;border:1px solid #000;border-bottom:2.5px solid #000;padding:5px 4px}
+.report table.rt td{padding:6px 6px;border-bottom:.75px solid #6b6b6b;border-left:.75px solid #8a8a8a;vertical-align:middle;overflow-wrap:anywhere}
+.report table.rt td:first-child{border-left:none}
+.report table.rt td.t{text-align:left}
+.report table.rt td.n{text-align:center}
+.report table.rt td.list{text-align:left;font-size:9.5pt}
+.report table.rt tr.sub td,.report table.rt tr.grand td{font-weight:700;font-style:italic;border-left:none;border-top:4px double #000;border-bottom:1.5px solid #000;padding-top:5px;padding-bottom:5px}
+.report table.rt tr.grand td{border-bottom:4px double #000}
+.report table.rt tr{page-break-inside:avoid;break-inside:avoid}
+.report .empty{text-align:center;padding:30px;font-style:italic;color:#555}
+#measure{position:absolute;left:-20000px;top:0;visibility:hidden;pointer-events:none}
+#printArea{display:none}
+@media print{
+  body{background:#fff}
+  body > *:not(#printArea){display:none !important}
+  #printArea{display:block}
+  .page{box-shadow:none;margin:0;page-break-after:always;break-after:page}
+  .page:last-child{page-break-after:auto;break-after:auto}
+}
+/* PWA bits */
+.netstat{font-size:12px;padding:3px 9px;border-radius:12px;background:rgba(255,255,255,.14);color:#d6f5e1;white-space:nowrap}
+.netstat.off{background:#f7d774;color:#4a3800}
+.projname{font-size:13px;background:rgba(255,255,255,.12);padding:4px 11px;border-radius:12px;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.projname .st{opacity:.85;font-size:12px}
+.projname .st.dirty{color:#ffd56b;opacity:1;font-weight:600}
+.modal.wide{max-width:820px}
+.projtools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.projtools .spacer{flex:1}
+.projlist{max-height:52vh;overflow:auto;border:1px solid #dfe6e2;border-radius:8px}
+.projrow{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #edf1ef}
+.projrow:last-child{border-bottom:0}
+.projrow.cur{background:#eef7f1}
+.projrow .pinfo{flex:1;min-width:0}
+.projrow .pname{font-weight:700;color:var(--green);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projrow .pmeta{font-size:12px;color:var(--muted);margin-top:2px}
+.projrow .pbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.projempty{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+.memwarn{background:var(--amber-l);border:1px solid #f0d9a2;color:#6b4600;padding:8px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
+@media(max-width:700px){ .projrow{flex-wrap:wrap} .projrow .pbtns{width:100%;justify-content:flex-start} .projname{max-width:100%;order:5;flex-basis:100%} }
+.updatebar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#1f5d3a;color:#fff;padding:10px 14px;border-radius:10px;z-index:150;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;font-size:13px}
+.appfoot{text-align:center;color:var(--muted);font-size:12px;padding:6px 16px 22px}
+/* phones & small tablets */
+@media (max-width:700px){
+  header.app{padding:10px 12px;gap:8px}
+  header.app h1{font-size:16px}
+  header.app .sub{display:none}
+  header.app .btn{padding:5px 9px;font-size:12px}
+  nav.tabs{padding:0 6px;overflow-x:auto}
+  nav.tabs button{padding:9px 10px;font-size:13px;white-space:nowrap}
+  main{padding:12px 10px}
+  .card{padding:12px}
+  .entry{grid-template-columns:1fr 1fr}
+  .entry > label:nth-child(2){grid-column:1 / -1}
+  .entry > .entrybtns{grid-column:1 / -1}
+  .entry > *:nth-child(n+3){order:2}
+  .entry > label:nth-child(3),.entry > label:nth-child(4){order:1}
+  .entry > #othersPanel{order:1;margin-top:0}
+  .entry > .entrybtns .btn{flex:1;justify-content:center;padding:10px}
+  .toolbar .spacer{display:none}
+  .toolbar input[type=text]{width:100% !important}
+  .paperwrap{padding:10px}
+  .page{transform-origin:top left}
+  input[type=text],input[type=number],select{font-size:16px} /* stops iPhone zooming */
+}
+@media print{ .updatebar,.appfoot{display:none !important} }
+/* modal + toast */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:10px;padding:20px;max-width:620px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.modal h3{margin:0 0 10px;color:var(--green);font-size:16px}
+.modal .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.modal textarea{min-height:200px;font-family:Consolas,monospace;font-size:12px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#233029;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200;max-width:90%}
+#toast.show{opacity:1}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;font-size:11px}
+.iframe-note{display:none;background:var(--amber-l);border:1px solid #f0d9a2;color:#6b4600;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}
+</style>
+</head>
+<body>
+<header class="app">
+  <div>
+    <h1>🌳 Pre-felling Reports</h1>
+    <div class="sub">Stock Chart · Proposed Yield · Stock Summary · Yield Summary</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="projname" id="projName" title="Current project – click to see your saved projects"></span>
+  <span class="netstat" id="netStat" title="">●</span>
+  <button class="btn light" id="btnInstall" style="display:none">⬇ Install app</button>
+  <button class="btn light" id="btnNew" title="Start a new, empty project">＋ New project</button>
+  <button class="btn light" id="btnOpen" title="Your saved projects, or open a .fsy project file (Ctrl+O)">📂 Open project…</button>
+  <button class="btn light" id="btnSave" title="Save this project in the app and/or as a .fsy file (Ctrl+S)">💾 Save project</button>
+  <input type="file" id="fileProject" hidden>
+</header>
+<nav class="tabs">
+  <button data-tab="data" class="active">1. Project &amp; Tree Data</button>
+  <button data-tab="species">2. Species List</button>
+  <button data-tab="reports">3. Reports</button>
+</nav>
+
+<main>
+<!-- ============ DATA TAB ============ -->
+<section class="tab active" id="tab-data">
+  <div class="card">
+    <h2>Project details <span class="count">(report heading, in this order – blank ones are skipped)</span></h2>
+    <div class="grid g4">
+      <label class="f">Company (optional)<input type="text" id="pCompany" placeholder="e.g. Mbaza Company Limited"></label>
+      <label class="f">Area (Reserve)<input type="text" id="pLocation" placeholder="e.g. Fum Forest Reserve FMU"></label>
+      <label class="f">Forest District<input type="text" id="pDistrict" placeholder="e.g. Bekwai Forest District"></label>
+      <label class="f">Compartment (optional)<input type="text" id="pExtra" placeholder="e.g. Compt 21"></label>
+      <label class="f">Felling series (optional)<input type="text" id="pSeries" placeholder="e.g. GAP Felling Series"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Enter a tree</h2>
+    <div class="entry">
+      <label class="f">Stock No.<input type="text" id="eStock" autocomplete="off"></label>
+      <label class="f">Species (type code or name)
+        <div class="combo" id="spCombo">
+          <input type="text" id="eSpecies" autocomplete="off" placeholder="Select species…">
+          <button class="arrow" type="button" tabindex="-1" id="spArrow">▼</button>
+          <ul id="spList"></ul>
+        </div>
+      </label>
+      <label class="f"><span id="eNameLbl">Local name</span><input type="text" id="eName" readonly tabindex="-1" autocomplete="off"></label>
+      <label class="f"><span id="eGroupLbl">Felling group</span><input type="text" id="eGroup" readonly tabindex="-1" autocomplete="off" inputmode="numeric"></label>
+      <datalist id="fellLimitsMain"><option value="110"><option value="90"><option value="70"><option value="50"><option value="30"><option value="20"></datalist>
+      <div class="diamf">Diameter (cm)
+        <div class="diamrow">
+          <input type="text" id="eDiam" inputmode="decimal" autocomplete="off">
+          <label class="plusbox" id="plusBox" title="Tick for trees recorded as 150+ (150 cm and above, size not measured)"><input type="checkbox" id="ePlus"> 150+</label>
+        </div>
+      </div>
+      <label class="chk" style="padding-bottom:8px"><input type="checkbox" id="eYield"> Yield</label>
+      <div class="entrybtns" style="display:flex;gap:6px">
+        <button class="btn primary" id="btnAdd">＋ Add tree</button>
+        <button class="btn" id="btnCancelEdit" style="display:none">Cancel</button>
+      </div>
+    <div class="otherspanel" id="othersPanel" style="display:none">
+      <div class="ophead"><b>Others – species not in the list</b><span class="small muted">Type the <b>Local name</b> and <b>Felling group</b> in the boxes above. When you add the tree, this species is also saved to your species list on this device.</span><button class="btn sm" type="button" id="oCancel">✕ Cancel</button></div>
+      <div class="ogrid">
+        <label class="f">Code / abvr <span class="small muted">(optional – made for you if blank)</span><input type="text" id="oCode" autocomplete="off"></label>
+        <label class="f">Scientific name <span class="small muted">(optional)</span><input type="text" id="oSci" autocomplete="off" style="font-style:italic"></label>
+      </div>
+      <div id="oMsg"></div>
+    </div>
+    </div>
+    <div class="hint">Can't find the species? Choose <b>Others</b> at the bottom of the species list to enter it yourself. Fast entry: type the species code, press <kbd>Enter</kbd> to pick it, type the diameter (or tick <b>150+</b>, or type <kbd>150+</kbd>), press <kbd>Enter</kbd> to add. The stock number goes up by one each time. Unticked trees are <b>Retained</b>.</div>
+  </div>
+
+  <div class="card">
+    <h2>Tree data <span class="count" id="treeCount"></span></h2>
+    <div class="toolbar">
+      <label class="chk yieldall"><input type="checkbox" id="allYield"> Mark ALL stock as yield</label>
+      <button class="btn sm" id="btnAutoMark" title="Tick Yield for trees whose diameter is at or above their species' felling group">Auto-mark by felling limit</button>
+      <button class="btn sm" id="btnClearMarks">Untick all</button>
+      <div class="spacer"></div>
+      <input type="text" id="treeFilter" placeholder="Filter…" style="width:160px">
+      <button class="btn" id="btnImportTrees">⬆ Import Excel/CSV</button>
+      <button class="btn" id="btnPasteTrees">📋 Paste from Excel</button>
+      <button class="btn" id="btnExportTrees">⬇ Export CSV</button>
+      <button class="btn" id="btnSortTrees">Sort by Stock No.</button>
+      <button class="btn danger" id="btnClearTrees">Clear all</button>
+      <input type="file" id="fileTrees" accept=".xlsx,.csv,.txt" hidden>
+    </div>
+    <div id="warnings"></div>
+    <div class="tablewrap">
+      <table class="data" id="treeTable">
+        <thead><tr><th class="num">#</th><th>Stock No.</th><th>Code</th><th>Local Name</th><th class="c">Felling Grp</th><th class="num">Diameter (cm)</th><th class="c">Class</th><th class="c">Yield</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="hint">Import columns: <b>Stock No</b>, <b>Code/Abvr</b> and/or <b>Species</b> (any local name or spelling), <b>Diameter</b> (big trees may be written <b>150+</b>, <b>&gt;150</b> or <b>150 &amp; above</b>; they go in the 150+ class), and optionally <b>Yield</b> (Y/N). If both code and name are given, <b>the code decides</b>. A header row is detected automatically. <a href="#" id="dlTreeTemplate">Download template</a> · <a href="#" id="loadDemo">Load demo data (from your samples)</a></div>
+  </div>
+</section>
+
+<!-- ============ SPECIES TAB ============ -->
+<section class="tab" id="tab-species">
+  <div class="card">
+    <h2>Species list <span class="count" id="spCount"></span> <span class="savednote" id="spSaved">✓ Your changes are saved on this device</span></h2>
+    <div class="toolbar">
+      <button class="btn primary" id="btnAddSpecies">＋ Add species</button>
+      <button class="btn" id="btnImportSpecies">⬆ Import Excel/CSV</button>
+      <button class="btn" id="btnPasteSpecies">📋 Paste from Excel</button>
+      <button class="btn" id="btnExportSpecies" title="Download your species list (keep it as a backup or share it)">⬇ Export / back up</button>
+      <button class="btn" id="btnResetSpecies" title="Restore the official Appendix II list">↺ Restore official list</button>
+      <div class="spacer"></div>
+      <select id="spShow" style="width:auto"><option value="">All species</option><option value="mine">Added by me</option><option value="edited">Edited by me</option><option value="changed">All my changes</option></select>
+      <input type="text" id="spFilter" placeholder="Filter…" style="width:180px">
+      <input type="file" id="fileSpecies" accept=".xlsx,.csv,.txt" hidden>
+    </div>
+    <div class="tablewrap" style="max-height:620px">
+      <table class="data" id="spTable">
+        <thead><tr><th style="width:90px">Code</th><th style="width:170px">Report name <span class="muted small">(prints)</span></th><th>Other local names &amp; spellings <span class="muted small">(comma separated)</span></th><th style="width:100px">Other codes</th><th style="width:110px">Felling limit (cm)</th><th style="width:210px">Scientific name</th><th class="num" style="width:60px">Trees</th><th style="width:50px"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="hint"><b>Edit any cell</b> to change a species, or click <b>＋ Add species</b>. Your changes and added species are <b>kept permanently on this device</b>: they stay after closing the app, starting a <b>New project</b>, opening someone else's project, or installing an app update. Added species are tagged <span class="tag green">added</span> and changed official ones <span class="tag amber">edited</span>. To move your list to another phone or computer, use <b>Export / back up</b> there and <b>Import Excel/CSV</b> (Merge) on the other device.</div>
+    <div class="hint">Built in: the official list from the <i>Manual of Procedure – Stock Survey &amp; Yield Allocation, Appendix II</i>. <b>The code identifies the species.</b> Any of the other names or spellings typed or imported is matched to its code, and the <b>report name</b> is what prints. Import columns: <b>Code</b>, <b>Report Name</b>, optional <b>Other Names</b> and <b>Other Codes</b>, <b>Felling Limit</b>, <b>Scientific Name</b>. <a href="#" id="dlSpTemplate">Download template</a></div>
+  </div>
+  <div class="card">
+    <h2>Diameter classes</h2>
+    <div class="grid g4" style="max-width:800px">
+      <label class="f">Lowest diameter (cm)<input type="number" id="sMin" min="0" step="1"></label>
+      <label class="f">Class width (cm)<input type="number" id="sWidth" min="1" step="1"></label>
+      <label class="f">Number of classes<input type="number" id="sN" min="1" max="15" step="1"></label>
+    </div>
+    <div class="hint">Classes: <span id="classPreview"></span>. The last class is open-ended. Trees below the lowest diameter are left out of the reports.</div>
+  </div>
+</section>
+
+<!-- ============ REPORTS TAB ============ -->
+<section class="tab" id="tab-reports">
+  <div class="iframe-note" id="iframeNote">If the print dialog doesn't open, the preview window may be blocking it. <a href="" target="_blank" id="newTabLink">Open the app in a new browser tab</a> and print from there.</div>
+  <div class="card">
+    <div class="toolbar" style="margin-bottom:0">
+      <div class="rtabs" id="rtabs">
+        <button data-r="stockChart" class="active">1. Stock Chart</button>
+        <button data-r="proposedYield">2. Proposed Yield</button>
+        <button data-r="stockSummary">3. Stock Summary</button>
+        <button data-r="yieldSummary">4. Yield Summary</button>
+        <button data-r="all">All 4 reports</button>
+      </div>
+      <div class="spacer"></div>
+      <label class="f" style="flex-direction:row;align-items:center;gap:6px">Paper
+        <select id="paper" style="width:auto"><option value="A4">A4</option><option value="letter">Letter</option></select>
+      </label>
+      <label class="f" style="flex-direction:row;align-items:center;gap:6px">Columns
+        <select id="colOrder" style="width:auto"><option value="name">Species, Abvr</option><option value="code">Abvr, Species</option></select>
+      </label>
+      <button class="btn primary" id="btnPrint">🖨 Print / Save as PDF</button>
+      <button class="btn" id="btnPrintAll">🖨 Print all 4</button>
+    </div>
+    <div class="hint" id="reportStatus"></div>
+    <div class="hint">To save a PDF, click Print and choose <b>"Save as PDF"</b> as the destination. The layout is set to landscape with page numbers. For best results, set Margins to <b>Default</b> and Scale to <b>100</b>. To hide the browser's date/URL on the page, untick "Headers and footers" under <i>More settings</i>.</div>
+  </div>
+  <div class="paperwrap" id="paper-preview"></div>
+</section>
+</main>
+
+<div id="updateBar" class="updatebar" style="display:none">A new version of the app is ready. <button class="btn sm" id="btnReload">Reload now</button></div>
+<footer class="appfoot" id="appFoot">Pre-felling Reports · works offline once opened · your data stays on this device (use <b>Save project</b> to back up or share) · <span id="appVer"></span></footer>
+<div id="printArea"></div>
+<div id="measure"></div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   DEFAULT DATA
+   ===================================================================== */
+// Official species list: Manual of Procedure – Stock Survey & Yield Allocation, Appendix II.
+// The CODE identifies the species. [code, report name, other names & spellings, felling limit cm, scientific name, other codes]
+const SPECIES_VERSION = 3;
+const DEFAULT_SPECIES = [
+  ["Ea", "Edinam", ["Tiama", "Gedu Nohor"], 110, "Entandrophragma angolense", []],
+  ["Ecl", "Penkwa-Akoa", [], 110, "Entandrophragma candollei", []],
+  ["Ec", "Penkwa", ["Sapele"], 110, "Entandrophragma cylindricum", []],
+  ["Eu", "Efoobrodedwo", ["Utile", "Sipo"], 110, "Entandrophragma utile", []],
+  ["Ka", "Krumben", ["Krumbeng"], 110, "Khaya anthotheca", []],
+  ["Kg", "Kruba", [], 110, "Khaya grandifoliola", []],
+  ["Mil", "Odum", ["Iroko"], 110, "Milicia excelsa", []],
+  ["Nau", "Kusia", ["Opepe", "Badi"], 110, "Nauclea diderrichii", []],
+  ["Per", "Kokrodua", ["Afrormosia", "Assamela"], 110, "Pericopsis elata", []],
+  ["Tie", "Makore", ["Baku"], 110, "Tieghemella heckelii", []],
+  ["Abo", "Sinuro", ["Nyamedua", "Onyame-dua", "Sinduro", "Alstonia"], 90, "Alstonia boonei", []],
+  ["Ant", "Chenchen", ["Kyenkyen", "Kyekyen", "Antiaris"], 90, "Antiaris toxicaria", []],
+  ["Can", "Bediwonua", [], 90, "Canarium schweinfurthii", []],
+  ["Cp", "Ceiba", ["Onyina", "Silk Cotton"], 90, "Ceiba pentandra", []],
+  ["Do", "Hyedua", ["Hyedua-white", "Ogea"], 90, "Daniellia ogea", []],
+  ["Ge", "Anokye-Hyedua", [], 90, "Guibourtia ehie", []],
+  ["Ki", "Dubini", ["African Mahogany"], 90, "Khaya ivorensis", []],
+  ["Lop", "Kaku", ["Ekki", "Azobe"], 90, "Lophira alata", []],
+  ["Mir", "Odum-Nua", [], 90, "Milicia regia", []],
+  ["Rih", "Wama", ["Njansang"], 90, "Ricinodendron heudelotii", []],
+  ["Afl", "Duagyenne", [], 70, "Afrostyrax lepidophyllus", []],
+  ["Afz", "Papao", ["Doussie", "Afzelia"], 70, "Afzelia africana", []],
+  ["Afb", "Papao-Nua", [], 70, "Afzelia bella", []],
+  ["Ala", "Pampena", ["Panpana"], 70, "Albizia adianthifolia", []],
+  ["Alf", "Awiemfosamina", [], 70, "Albizia ferruginea", []],
+  ["Alz", "Okoro", [], 70, "Albizia zygia", []],
+  ["Amp", "Yaya", [], 70, "Amphimas pterocarpoides", []],
+  ["Ano", "Kokote", ["Duakokote"], 70, "Anopyxis klaineana", []],
+  ["Acn", "Bontodie", [], 70, "Anthocleista nobilis", []],
+  ["Anf", "Totoro-Nini", [], 70, "Anthonotha fragrans", []],
+  ["Ami", "Aprokuma", [], 70, "Antrocaryon micraster", []],
+  ["Aub", "Dahoma-Nua", ["Dahomanini"], 70, "Aubrevillea kerstingii", []],
+  ["Auk", "Aucoumea", [], 70, "Aucoumea klaineana", []],
+  ["Bec", "Kwatafompaboa-Nini", [], 70, "Berlinia confusa", []],
+  ["Ber", "Kwatafompaboa-Kokoo", [], 70, "Berlinia occidentalis", []],
+  ["Bet", "Kwatafompaboa-Bere", [], 70, "Berlinia tomentella", []],
+  ["Bls", "Akye", [], 70, "Blighia sapida", []],
+  ["Blu", "Akye-Bere", [], 70, "Blighia unijugata", []],
+  ["Blw", "Akye-Kobiri", [], 70, "Blighia welwitschii", []],
+  ["Bbu", "Akata", ["Bombax"], 70, "Bombax buonopozense", []],
+  ["Boa", "Mmaakube", [], 70, "Borassus aethiopum", []],
+  ["Brl", "Kankabin", [], 70, "Breviea leptosperma", []],
+  ["Bra", "Opam Kotokrodu", [], 70, "Bridelia atroviridis", []],
+  ["Brg", "Opam Kotokrodu-Kese", [], 70, "Bridelia grandis", []],
+  ["Ced", "Cedrela", [], 70, "Cedrela odorata", []],
+  ["Cem", "Esa", [], 70, "Celtis mildbraedii", []],
+  ["Cez", "Esakokoo", ["Esakoko"], 70, "Celtis zenkeri", []],
+  ["Cea", "Esakosua", ["Esakosuo"], 70, "Celtis adolfi-friderici", []],
+  ["Cal", "Akasaa", [], 70, "Chrysophyllum albidum", []],
+  ["Chg", "Kumfena", [], 70, "Chrysophyllum giganteum", []],
+  ["Cpe", "Atabene", [], 70, "Chrysophyllum perpulchrum", []],
+  ["Chp", "Duaatadwe", [], 70, "Chrysophyllum pruniforme", []],
+  ["Csu", "Adasema", [], 70, "Chrysophyllum subnudum", []],
+  ["Cos", "Abruma", [], 70, "Coelocaryon sphaerocarpum", []],
+  ["Cog", "Watapuo", [], 70, "Cola gigantea", []],
+  ["Col", "Watapuo-Bere", [], 70, "Cola lateritia", []],
+  ["Cop", "Entedua", [], 70, "Copaifera salikounda", []],
+  ["Cmi", "Tweneboa", [], 70, "Cordia millenii", []],
+  ["Cor", "Tweneboa-Bere", [], 70, "Cordia platythyrsa", []],
+  ["Coe", "Bodwue", [], 70, "Coula edulis", []],
+  ["Cz", "Dodwatu", [], 70, "Croton zambesicus", []],
+  ["Crg", "Samantaa-Nini", [], 70, "Crudia gabonensis", []],
+  ["Crt", "Takorowa-Nzima", [], 70, "Cryptosepalum tetraphyllum", []],
+  ["Cyl", "Denya", ["Okan"], 70, "Cylicodiscus gabunensis", []],
+  ["Cyn", "Ananta", [], 70, "Cynometra ananta", []],
+  ["Dak", "Adwea", [], 70, "Dacryodes klaineana", []],
+  ["Dao", "Senya", [], 70, "Daniellia oliveri", []],
+  ["Dat", "Sopi", [], 70, "Daniellia thurifera", []],
+  ["Dia", "Duabankye", [], 70, "Dialium aubrevillei", []],
+  ["Dim", "Gaa", ["African Ebony"], 70, "Diospyros mespiliformis", []],
+  ["Dsm", "Sanza-Minika", ["Duapentoa"], 70, "Diospyros sanza-minika", []],
+  ["Dc", "Fetefre", [], 70, "Discoglypremna caloneura", []],
+  ["Dis", "Bonsamdua", ["Ayan"], 70, "Distemonanthus benthamianus", []],
+  ["Dra", "Opaha-Bere", [], 70, "Drypetes afzelii", []],
+  ["Eri", "Potrodom", ["Potrodum", "Missanda"], 70, "Erythrophleum ivorense", []],
+  ["Ers", "Akosika", [], 70, "Erythrophleum suaveolens", []],
+  ["Erm", "Pepea-Nini", [], 70, "Erythroxylum mannii", []],
+  ["Fie", "Nyankyerene", [], 70, "Ficus exasperata", []],
+  ["Fic", "Odoma", ["Nwadua", "Domini"], 70, "Ficus sur", []],
+  ["Fiv", "Nyankyerene-Kese", ["Kotreamfo"], 70, "Ficus variifolia", []],
+  ["Fua", "Okae", [], 70, "Funtumia africana", []],
+  ["Fue", "Funtum", [], 70, "Funtumia elastica", []],
+  ["Alb", "Sonkyi", [], 70, "Garcinia oleosperma (=Allanblackia floribunda)", []],
+  ["Gil", "Tetekon", [], 70, "Gilbertiodendron limba", []],
+  ["Gip", "Tetekon-Gyamera", [], 70, "Gilbertiodendron preussii", []],
+  ["Gis", "Gyamera", [], 70, "Gilbertiodendron splendidum", []],
+  ["Gi", "Nsudua", [], 70, "Gluema ivorensis", []],
+  ["Glb", "Foto", [], 70, "Glyphaea brevis", []],
+  ["Gma", "Gmelina", [], 70, "Gmelina arborea", []],
+  ["Gc", "Kwabohoro", ["Guarea", "Bosse"], 70, "Guarea cedrata", []],
+  ["Gt", "Kwadwuma", [], 70, "Guarea thompsonii", []],
+  ["Hal", "Subaha", ["Abura"], 70, "Hallea ledermannii", []],
+  ["Has", "Subaha-Akoa", [], 70, "Hallea stipulosa", []],
+  ["Han", "Hotrohotro", ["Fotie", "Hannoa"], 70, "Hannoa klaineana", ["Hak"]],
+  ["Hcr", "Duabaha", [], 70, "Hexalobus crispiflorus", []],
+  ["Hof", "Sese", [], 70, "Holarrhena floribunda", []],
+  ["Hog", "Nakwa", [], 70, "Holoptelea grandis", []],
+  ["Hol", "Esononankroma", [], 70, "Homalium letestui", []],
+  ["Irg", "Abesebuo", [], 70, "Irvingia gabonensis", []],
+  ["Khs", "Esereso-Dubini", ["Kuka", "Pinu"], 70, "Khaya senegalensis", []],
+  ["Kla", "Kroma", [], 70, "Klainedoxa gabonensis", []],
+  ["Klt", "Kroma-Akoa", [], 70, "Klainedoxa trillesii", []],
+  ["Law", "Kumanini", ["Kumnini", "Kumanine"], 70, "Lannea welwitschii", []],
+  ["Lec", "Dwindwera", [], 70, "Lecaniodiscus cupanoides", []],
+  ["Lep", "Lecaniodiscus", [], 70, "Lecaniodiscus punctatus", []],
+  ["Los", "Sante", [], 70, "Lonchocarpus sericeus", []],
+  ["Lov", "Dubinibiri", ["African Walnut"], 70, "Lovoa trichilioides", []],
+  ["Mah", "Opam-Fufuo", [], 70, "Macaranga hurifolia", []],
+  ["Mae", "Onwamdua", ["Musizi"], 70, "Maesopsis eminii", []],
+  ["Maf", "Ankyewa", [], 70, "Majidea fosteri", []],
+  ["Mam", "Bompagya", [], 70, "Mammea africana", []],
+  ["Mao", "Berekankum", [], 70, "Manilkara obovata", []],
+  ["Man", "Oprono", ["Mansonia"], 70, "Mansonia altissima", []],
+  ["Mar", "Kajabirise", [], 70, "Maranthes aubrevillei", []],
+  ["Mch", "Kajabiri", [], 70, "Maranthes chrysophylla", []],
+  ["Mag", "Afam-Nini", [], 70, "Maranthes glabra", []],
+  ["Mro", "Afam-Bere", [], 70, "Maranthes robusta", []],
+  ["Mad", "Pepea", [], 70, "Margaritaria discoidea", []],
+  ["Mem", "Otwese", [], 70, "Memecylon lateriflorum", []],
+  ["Mol", "Konkroma", [], 70, "Morinda lucida", []],
+  ["Mom", "Wonton", [], 70, "Morus mesozygia", []],
+  ["Neo", "Neolemonniera", [], 70, "Neolemonniera clitandrifolia", []],
+  ["Nea", "Adadaba-Nua", [], 70, "Newtonia aubrevillei", []],
+  ["Ned", "Adadaba", [], 70, "Newtonia duparquetiana", []],
+  ["Oma", "Duapompo", [], 70, "Omphalocarpum ahia", []],
+  ["Ome", "Esonodokono", [], 70, "Omphalocarpum elatum", []],
+  ["Ong", "Bodwe", [], 70, "Ongokea gore", []],
+  ["Pan", "Kokroboba", [], 70, "Panda oleosa", []],
+  ["Pae", "Afam", [], 70, "Parinari excelsa", []],
+  ["Pbi", "Asoma", [], 70, "Parkia bicolor", []],
+  ["Pem", "Ataa", [], 70, "Pentaclethra macrophylla", []],
+  ["Pen", "Abotoasebie", [], 70, "Pentadesma butyracea", []],
+  ["Pet", "Esia", ["Essia"], 70, "Petersianthus macrocarpus", []],
+  ["Pie", "Fotie-Akoa", ["Fotie-Nua"], 70, "Pierreodendron kerstingii", []],
+  ["Pip", "Dahoma", ["Dabema"], 70, "Piptadeniastrum africanum", []],
+  ["Pla", "Kafuososini", [], 70, "Placodiscus bancoensis", []],
+  ["Plb", "Kafuoso", [], 70, "Placodiscus boya", []],
+  ["Anr", "Asamfena", [], 70, "Pouteria altissima (Aningeria robusta)", []],
+  ["Poa", "Asamfena-Bere", [], 70, "Pouteria aningeria (Aningeria altissima)", []],
+  ["Psk", "Kurubeta", [], 70, "Pseudocedrela kotschyi", []],
+  ["Pth", "Kwae-Kane", ["Apetiri"], 70, "Pteleopsis hylodendron", []],
+  ["Ptb", "Kyereye-Bere", [], 70, "Pterygota bequaertii", []],
+  ["Pyc", "Otie", ["Ilomba"], 70, "Pycnanthus angolensis", []],
+  ["Bbr", "Onyinakoben", [], 70, "Rhodognaphalon brevicuspe", []],
+  ["Sco", "Tiabutuo", [], 70, "Scottellia klaineana", []],
+  ["Sha", "Ketebontore-Nua", [], 70, "Shirakiopsis aubrevillei", []],
+  ["Spc", "Akuakuo-Ninsuo", [], 70, "Spathodea campanulata", []],
+  ["Spo", "Awora-Tweanka", [], 70, "Spondianthus preussii", []],
+  ["Sto", "Ohaa", [], 70, "Sterculia oblonga", []],
+  ["Ste", "Wawabima", [], 70, "Sterculia rhinopetala", []],
+  ["Stt", "Sofo", [], 70, "Sterculia tragacantha", []],
+  ["Syn", "Asaa-Nini", [], 70, "Synsepalum aubrevillei", []],
+  ["Sya", "Baku-Nini", [], 70, "Synsepalum afzelii", []],
+  ["Tal", "Takorowa-Nua", [], 70, "Talbotiella gentii", []],
+  ["Ti", "Emire", ["Framire", "Idigbo"], 70, "Terminalia ivorensis", []],
+  ["Ts", "Ofram", ["Limba", "Afara"], 70, "Terminalia superba", []],
+  ["Trg", "Tanuro-Kese", [], 70, "Trichilia megalantha", []],
+  ["Trm", "Tanuro", [], 70, "Trichilia monadelpha", []],
+  ["Tro", "Tanuro-Bere", [], 70, "Trichilia ornithothera", []],
+  ["Trp", "Kakadikro", [], 70, "Trichilia prieureana", []],
+  ["Trt", "Tanuro-Nini", [], 70, "Trichilia tessmannii", []],
+  ["Trc", "Anaku-Nua", [], 70, "Trichoscypha chevalieri", []],
+  ["Tma", "Okure", [], 70, "Trilepisium madagascariense", []],
+  ["Tri", "Wawa", ["Obeche", "Samba", "Ayous"], 70, "Triplochiton scleroxylon", []],
+  ["Tur", "Apapaye", ["Avodire"], 70, "Turraeanthus africanus", []],
+  ["Ug", "Kontan", [], 70, "Uapaca guineensis", []],
+  ["Vec", "Owudifuokete", [], 70, "Vernonia conferta", []],
+  ["Xyl", "Obaa", [], 70, "Xylopia quintasii", []],
+  ["Zag", "Okuo", [], 70, "Zanthoxylum gilletii", []],
+  ["Zal", "Oyaa", [], 70, "Zanthoxylum leprieurii", []],
+  ["Coa", "Cordia", [], 50, "Cordia alliodora", []],
+  ["Cci", "Corymbia", [], 50, "Corymbia citriodora", []],
+  ["Dam", "African Blackwood", [], 50, "Dalbergia melanoxylon", []],
+  ["Euc", "Eucalyptus", [], 50, "Eucalyptus spp.", []],
+  ["Her", "Nyankom", ["Niangon"], 50, "Heritiera utilis", []],
+  ["Nes", "Danta", [], 50, "Nesogordonia papaverifera", []],
+  ["Pf", "Paraserianthes", [], 50, "Paraserianthes falcataria", []],
+  ["Pc", "Caribbean Pine", [], 50, "Pinus caribaea", []],
+  ["Pte", "Krayie", ["Rosewood"], 50, "Pterocarpus erinaceus", []],
+  ["Pts", "African Padouk", [], 50, "Pterocarpus soyauxii", []],
+  ["Ptm", "Kyereye", ["Koto", "Kyere"], 50, "Pterygota macrocarpa", []],
+  ["Acm", "Acacia", [], 30, "Acacia mangium", []],
+  ["Heb", "Rubber Tree", [], 30, "Hevea brasiliensis", []],
+  ["Mis", "Tetetoa", ["Frafraha", "Teteto-Bere", "Taatso"], 30, "Milletia spp.", []],
+  ["Ses", "Cassia", [], 30, "Senna siamea", []],
+  ["Str", "Afena", [], 30, "Strombosia glaucescens", []],
+  ["Azi", "Neem", [], 20, "Azadirachta indica", []],
+  ["Brp", "York", [], 20, "Broussonetia papyrifera", []],
+  ["Teg", "Teak", ["Teca"], 20, "Tectona grandis", []]
+].map(([code,name,alt,group,sci,altCodes])=>({code,name,alt,group,sci,altCodes}));
+
+// Demo trees reconstructed from the sample Stock Chart (class lower bound -> stock numbers)
+const DEMO = {
+  Ea:{50:[19,89],70:[18,23,128],90:[24,129]}, Mil:{90:[14,101,104],110:[35,88]}, Nau:{110:[75]},
+  Abo:{70:[34,103],90:[40],110:[29,51,123]}, Ant:{70:[27,139,140],90:[76],130:[73]},
+  Bls:{50:[16,87],70:[3,31,124],90:[49,72,99]}, Cp:{70:[117,132,135],90:[83],110:[52,68],130:[11],150:[71,95,137]},
+  Do:{70:[58,96,97,98],90:[67]}, Alz:{70:[59,60]}, Amp:{50:[32],70:[22,36,63,113],90:[92,112,122],110:[8],130:[70]},
+  Bbu:{50:[39,66,91],70:[2,84,94,105,102,109,119,120,121],90:[41,74,85,86,107,111,133,134,138],110:[54,64]},
+  Cem:{50:[1,21],70:[10,15,56,69,78,79,108,144],90:[12,43],110:[6,50,77,110]}, Cog:{110:[143]},
+  Dis:{70:[115,141]}, Dc:{70:[106]}, Han:{70:[28],90:[53],110:[4,81,82,118,131],130:[61,62],150:[142]},
+  Law:{50:[33],70:[5,37,48]}, Pet:{70:[114,125],110:[7]}, Pyc:{50:[38],70:[55,57,100,136],90:[30],110:[9,80]},
+  Ste:{70:[13,65]}, Tri:{90:[26,44,127]}, Trm:{70:[45,47]}, Ts:{50:[90],70:[17,42],90:[116]},
+  Zag:{50:[20],70:[25],110:[130]}, Nes:{50:[93],70:[46,126]}
+};
+
+const REPORTS = {
+  stockChart:   {title:"Stock Chart",    yield:false, list:true},
+  proposedYield:{title:"Proposed Yield", yield:true,  list:true},
+  stockSummary: {title:"Stock Summary",  yield:false, list:false},
+  yieldSummary: {title:"Yield Summary",  yield:true,  list:false},
+};
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const STORE_KEY = "forestry-stock-yield-v1";
+function freshState(){
+  return {
+    project:{location:"",company:"",district:"",extra:"",series:""},
+    settings:{minD:30,width:20,n:7,paper:"A4",nameFirst:true,layoutVersion:3},
+    species: DEFAULT_SPECIES.map(s=>({...s})),
+    trees: [],
+    allYield:false,
+    speciesVersion:SPECIES_VERSION,
+    nextId:1,
+    meta:{id:null,name:"",hash:null}
+  };
+}
+let state = load() || freshState();
+let editingId = null;
+let currentReport = "stockChart";
+
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)); if(s && s.species && s.trees) return normalize(s); }catch(e){}
+  return null;
+}
+function splitList(v){ return (Array.isArray(v)?v:String(v??"").split(/[;,|]/)).map(x=>String(x).trim()).filter(Boolean); }
+function cleanSpecies(x){
+  return {code:String(x.code||"").trim(), name:String(x.name||"").trim(), alt:splitList(x.alt), group:toNum(x.group), sci:String(x.sci||""), altCodes:splitList(x.altCodes)};
+}
+function normalize(s){
+  const f = freshState();
+  s.project = Object.assign(f.project, s.project||{});
+  s.settings = Object.assign(f.settings, s.settings||{});
+  s.species = (s.species||[]).map(cleanSpecies);
+  s.trees = (s.trees||[]).map((t,i)=>({id:t.id||i+1,stock:String(t.stock??""),sp:String(t.sp||""),d:toNum(t.d),p:!!t.p,y:!!t.y}));
+  s.nextId = Math.max(s.nextId||1, ...s.trees.map(t=>t.id+1), 1);
+  s.allYield = !!s.allYield;
+  s.meta = Object.assign({id:null,name:"",hash:null}, s.meta||{});
+  if((s.settings.layoutVersion||1) < 2){ s.settings.nameFirst=true; }
+  if((s.settings.layoutVersion||1) < 3){ s.settings.minD=30; s.settings.width=20; s.settings.n=7; s.settings.layoutVersion=3; }
+  if((s.speciesVersion||1) < SPECIES_VERSION){
+    // Upgrade to the official species list; fix old code Hak -> Han (Hotrohotro); keep any custom species
+    s.trees.forEach(t=>{ if(t.sp.toLowerCase()==="hak") t.sp="Han"; });
+    const known=new Set(DEFAULT_SPECIES.map(x=>x.code.toLowerCase()));
+    const oldDefaults=new Set(["hak","ea","mil","nau","abo","ant","bls","cp","do","alz","amp","bbu","cem","cog","dis","dc","law","pet","pyc","ste","tri","trm","ts","zag","nes"]);
+    const custom=s.species.filter(x=>x.code && !known.has(x.code.toLowerCase()) && !oldDefaults.has(x.code.toLowerCase()));
+    s.species=DEFAULT_SPECIES.map(x=>({...x,alt:[...x.alt],altCodes:[...x.altCodes]})).concat(custom);
+    s.speciesVersion=SPECIES_VERSION;
+  }
+  return s;
+}
+let saveTimer=null;
+function save(){
+  spIdx=null;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveNow,150);
+}
+var saveWarned=false;
+function saveNow(){
+  clearTimeout(saveTimer); saveTimer=null;
+  try{ updateProjStatus(); }catch(e){}
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){ if(!saveWarned){ saveWarned=true; try{ toast("⚠ This browser is not allowing the app to save (private mode or storage full). Use Save project to keep your work.",7000); }catch(_){} } }
+}
+// write immediately when the app is closed or hidden, so no edit is lost
+window.addEventListener("pagehide",()=>{ if(saveTimer) saveNow(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden" && saveTimer) saveNow(); });
+// ask the browser to keep this app's data permanently (not cleared to free space)
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist(); }); }catch(e){}
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toNum(v){ if(v===null||v===undefined) return null; const m=String(v).replace(/,/g,"").match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):null; }
+// Diameter reader: "62", "62.5", "62,5", "62 cm", "150+", "150 +", "+150", ">150", "≥150", "150 & above", "above 150", "150 plus", "+"
+function parseDiam(v){
+  if(v===null||v===undefined) return {d:null,p:false};
+  if(typeof v==="number") return {d:isFinite(v)?v:null,p:false};
+  let s=String(v).trim().toLowerCase();
+  if(!s) return {d:null,p:false};
+  s=s.replace(/(\d),(\d{1,2})(?!\d)/,"$1.$2").replace(/,/g,"");
+  const plus=/\+|≥|>|(^|[^a-z])(above|over|plus|more|greater|upwards?|up|big(ger)?)([^a-z]|$)/.test(s);
+  const m=s.match(/\d+(\.\d+)?/);
+  if(!m) return plus? {d:150,p:true} : {d:null,p:false};
+  return {d:parseFloat(m[0]), p:plus};
+}
+function diamText(t){ return t.d===null||t.d===undefined? "" : (t.p? t.d+"+" : String(t.d)); }
+// Where a species came from: official (unchanged), edited (official code, changed by the user) or mine (added by the user)
+function spSource(s){
+  if(!spSource.def){ spSource.def=new Map(DEFAULT_SPECIES.map(x=>[x.code.toLowerCase(),x])); }
+  const d=spSource.def.get(String(s.code||"").toLowerCase());
+  if(!d) return "mine";
+  const same=(a,b)=>String(a??"").trim()===String(b??"").trim();
+  const L=a=>(a||[]).map(x=>String(x).trim().toLowerCase()).join("|");
+  return same(s.name,d.name)&&same(s.group,d.group)&&same(s.sci,d.sci)&&L(s.alt)===L(d.alt)&&L(s.altCodes)===L(d.altCodes) ? "official" : "edited";
+}
+const cmpStock = (a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:"base"});
+function toast(msg,ms=2600){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),ms); }
+function modal(title, bodyHtml, buttons){
+  return new Promise(res=>{
+    const bg=document.createElement("div"); bg.className="modal-bg";
+    bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3><div>${bodyHtml}</div><div class="btns"></div></div>`;
+    const bw=bg.querySelector(".btns");
+    buttons.forEach(b=>{ const el=document.createElement("button"); el.className="btn "+(b.cls||""); el.textContent=b.label;
+      el.onclick=()=>{ const val = b.value; const extra = bg.querySelector("textarea")?.value; const vals={}; bg.querySelectorAll("[name]").forEach(i=>vals[i.name]=i.type==="checkbox"?i.checked:i.value); bg.remove(); res({value:val,text:extra,vals}); }; bw.appendChild(el); });
+    document.body.appendChild(bg);
+    bg.querySelectorAll("input[name]:not([type=checkbox])").forEach(i=>i.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); bw.lastChild.click(); } }));
+    const ta=bg.querySelector("textarea"), fi=bg.querySelector("input[name]"); if(ta) ta.focus(); else if(fi){ fi.focus(); fi.select&&fi.select(); } else bw.lastChild.focus();
+  });
+}
+function download(name, text, type="text/csv"){
+  const blob=new Blob([text],{type:type+";charset=utf-8"}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+const csvCell = v => { v=String(v??""); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+const toCSV = rows => rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
+
+function speciesMap(){ const m=new Map(); state.species.forEach(s=>{ if(s.code) m.set(s.code.toLowerCase(),s); }); return m; }
+
+/* ---------- Species matching: the CODE decides; names/spellings are only used to find the code ---------- */
+var spIdx=null;
+const nameKey = x => String(x??"").toLowerCase().normalize("NFD").replace(/[^a-z]/g,"");
+// spelling skeleton: ch≈ky (Chenchen/Kyenkyen), ph≈f, doubled letters ignored (Esakoko/Esakokoo)
+const skel = x => nameKey(x).replace(/ch/g,"ky").replace(/ph/g,"f").replace(/(.)\1+/g,"$1");
+function nameParts(n){ const out=[]; String(n||"").split("/").forEach(p=>{ const m=p.match(/^(.*?)\s*\((.*?)\)\s*$/); if(m){ out.push(m[1],m[2]); } else out.push(p); }); return out.map(x=>x.trim()).filter(Boolean); }
+function allNames(s){ const seen=new Set(), out=[]; [s.name,...nameParts(s.name),...(s.alt||[]).flatMap(a=>[a,...nameParts(a)])].forEach(n=>{ const k=nameKey(n); if(k&&!seen.has(k)){ seen.add(k); out.push(n); } }); return out; }
+function speciesIndex(){
+  if(spIdx) return spIdx;
+  const codes=new Map(), altCodes=new Map(), names=new Map(), skels=new Map(), list=[];
+  const add=(m,k,s)=>{ if(!k) return; if(!m.has(k)) m.set(k,new Set()); m.get(k).add(s); };
+  state.species.forEach(s=>{
+    if(!s.code) return; codes.set(s.code.toLowerCase(),s);
+    (s.altCodes||[]).forEach(c=>add(altCodes,c.toLowerCase(),s));
+    allNames(s).forEach(n=>{ add(names,nameKey(n),s); add(skels,skel(n),s); list.push([skel(n),s,n]); });
+  });
+  return spIdx={codes,altCodes,names,skels,list};
+}
+function lev(a,b){ if(a===b) return 0; const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+  return prev[n]; }
+// returns {s, how, via} | {ambiguous:[...]} | null
+function matchSpecies(text){
+  let t=String(text??"").trim(); if(!t) return null;
+  const I=speciesIndex();
+  const dash=t.match(/^(\S+)\s+[–-]\s+/); if(dash && I.codes.has(dash[1].toLowerCase())) t=dash[1];   // "Ant – Chenchen"
+  const lc=t.toLowerCase();
+  if(I.codes.has(lc)) return {s:I.codes.get(lc),how:"code"};
+  const one=(set,how,via)=>{ if(!set) return null; const a=[...set]; return a.length===1?{s:a[0],how,via}:{ambiguous:a,how}; };
+  let r=one(I.altCodes.get(lc),"altcode",t); if(r) return r;
+  r=one(I.names.get(nameKey(t)),"name",t); if(r) return r;
+  const sk=skel(t);
+  r=one(I.skels.get(sk),"spelling",t); if(r) return r;
+  if(sk.length>=5){
+    const lim = sk.length>=8?2:1; let best=99, hits=new Map();
+    for(const [k,s,n] of I.list){ if(Math.abs(k.length-sk.length)>lim) continue; const d=lev(sk,k); if(d<best){ best=d; hits=new Map([[s.code,[s,n]]]); } else if(d===best) hits.set(s.code,[s,n]); }
+    if(best<=lim){ const a=[...hits.values()]; if(a.length===1) return {s:a[0][0],how:"spelling",via:t,matched:a[0][1]}; return {ambiguous:a.map(x=>x[0]),how:"spelling"}; }
+  }
+  // combined names such as "Sinuro/Nyamedua" or "Kokote (Duakokote)": every recognised part must point to the same code
+  const parts=nameParts(t); if(parts.length>1){ const found=parts.map(x=>matchSpecies(x)).filter(x=>x&&x.s); const codes=new Set(found.map(x=>x.s.code));
+    if(codes.size===1) return {s:found[0].s,how:"name",via:t}; }
+  return null;
+}
+function findSpecies(text){ const r=matchSpecies(text); return r&&r.s?r.s:null; }
+function relinkTrees(st){ st=st||state; const known=new Set(st.species.map(x=>x.code.toLowerCase()));
+  let n=0; st.trees.forEach(t=>{ if(!known.has(t.sp.toLowerCase())){ const s=findSpecies(t.sp); if(s){ t.sp=s.code; n++; } } }); return n; }
+function getClasses(){
+  const {minD,width,n}=state.settings; const out=[];
+  for(let i=0;i<n;i++){ const lo=minD+i*width, hi=lo+width-1; out.push({lo,label: i===n-1? `${lo} +` : `${lo} - ${hi}`}); }
+  return out;
+}
+function classIndex(d){
+  const {minD,width,n}=state.settings;
+  if(d===null||isNaN(d)||d<minD) return -1;
+  return Math.min(Math.floor((d-minD)/width), n-1);
+}
+function isYield(t){ return state.allYield || t.y; }
+
+/* =====================================================================
+   FILE PARSING (CSV + XLSX, no external libraries)
+   ===================================================================== */
+function parseDelimited(text){
+  text=text.replace(/^\uFEFF/,"");
+  const first=text.split(/\r?\n/).find(l=>l.trim())||"";
+  const delim = first.includes("\t")?"\t": (first.split(";").length>first.split(",").length?";":",");
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===delim){ row.push(cell); cell=""; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=""; }
+    else cell+=c;
+  }
+  if(cell!==""||row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r=>r.some(c=>String(c).trim()!==""));
+}
+async function readXlsx(buf){
+  const u8=new Uint8Array(buf), dv=new DataView(buf);
+  let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-65557);i--){ if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;} }
+  if(eocd<0) throw new Error("Not a valid .xlsx file");
+  const count=dv.getUint16(eocd+10,true); let off=dv.getUint32(eocd+16,true);
+  const files={}; const dec=new TextDecoder();
+  for(let k=0;k<count;k++){
+    if(dv.getUint32(off,true)!==0x02014b50) break;
+    const method=dv.getUint16(off+10,true), csize=dv.getUint32(off+20,true);
+    const nl=dv.getUint16(off+28,true), el=dv.getUint16(off+30,true), cl=dv.getUint16(off+32,true), lho=dv.getUint32(off+42,true);
+    files[dec.decode(u8.subarray(off+46,off+46+nl))]={method,csize,lho};
+    off+=46+nl+el+cl;
+  }
+  async function get(name){
+    const f=files[name]; if(!f) return null;
+    const start=f.lho+30+dv.getUint16(f.lho+26,true)+dv.getUint16(f.lho+28,true);
+    const data=u8.slice(start,start+f.csize);
+    if(f.method===0) return dec.decode(data);
+    const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return await new Response(stream).text();
+  }
+  const P=s=>new DOMParser().parseFromString(s,"application/xml");
+  const all=(node,tag)=>Array.from(node.getElementsByTagNameNS("*",tag));
+  let sheetPath="xl/worksheets/sheet1.xml";
+  try{
+    const wb=P(await get("xl/workbook.xml")); const sh=all(wb,"sheet")[0];
+    const rid=sh.getAttribute("r:id")||sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id");
+    const rels=P(await get("xl/_rels/workbook.xml.rels"));
+    const rel=all(rels,"Relationship").find(r=>r.getAttribute("Id")===rid);
+    if(rel){ let t=rel.getAttribute("Target"); sheetPath = t.startsWith("/")? t.slice(1) : "xl/"+t.replace(/^\.\//,""); }
+  }catch(e){}
+  const sst=[]; const ss=await get("xl/sharedStrings.xml");
+  if(ss){ all(P(ss),"si").forEach(si=>{ sst.push(all(si,"t").filter(t=>t.parentNode.localName!=="rPh").map(t=>t.textContent).join("")); }); }
+  const sx=await get(sheetPath); if(!sx) throw new Error("Could not find the first worksheet");
+  const rows=[];
+  all(P(sx),"row").forEach(r=>{
+    const row=[];
+    all(r,"c").forEach((c,ci)=>{
+      const ref=c.getAttribute("r"); let col=ci;
+      if(ref){ col=0; for(const ch of ref.replace(/\d+/g,"")) col=col*26+(ch.charCodeAt(0)-64); col--; }
+      const t=c.getAttribute("t"); const v=all(c,"v")[0]; let val="";
+      if(t==="s") val=sst[+v?.textContent]??"";
+      else if(t==="inlineStr") val=all(c,"t").map(x=>x.textContent).join("");
+      else val=v?v.textContent:"";
+      row[col]=val;
+    });
+    for(let i=0;i<row.length;i++) if(row[i]===undefined) row[i]="";
+    if(row.some(x=>String(x).trim()!=="")) rows.push(row);
+  });
+  return rows;
+}
+async function readTableFile(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith(".xls")) throw new Error("Old .xls format isn't supported. In Excel use File → Save As → .xlsx (or CSV).");
+  if(name.endsWith(".xlsx")) return await readXlsx(await file.arrayBuffer());
+  return parseDelimited(await file.text());
+}
+// find header row & map columns by keyword
+function mapColumns(rows, defs){
+  for(let r=0;r<Math.min(rows.length,10);r++){
+    const hdr=rows[r].map(c=>String(c).trim().toLowerCase());
+    const map={}; let hits=0;
+    for(const [key,patterns] of Object.entries(defs)){
+      const idx=hdr.findIndex((h,i)=>!Object.values(map).includes(i) && patterns.some(p=>p.test(h)));
+      if(idx>=0){ map[key]=idx; hits++; }
+    }
+    if(hits>=2) return {map, start:r+1};
+  }
+  return null;
+}
+
+/* =====================================================================
+   TREE IMPORT
+   ===================================================================== */
+const TREE_COLS = {
+  stock:[/stock/,/^s\/?no/,/tree\s*(no|num|#)/,/^no\.?$/,/^id$/,/number/],
+  code:[/code|abvr|abbr|^spp$/],
+  species:[/species|local|name|spp|trade/],
+  diam:[/diam|dbh|d\.\s*b\.?\s*h|^dia|girth|size|^d\.?$|^d\s*\(|\(cm\)|^cm$/],
+  yield:[/yield|status|fell|retain|mark/]
+};
+async function importTreeRows(rows){
+  if(!rows.length){ toast("No rows found"); return; }
+  let m=mapColumns(rows,TREE_COLS);
+  if(!m) m={map:{stock:0,species:1,diam:2,yield:3},start:0};
+  const {map,start}=m;
+  if(map.diam===undefined){
+    // no diameter heading found: use the column that holds the most diameter-like values
+    const used=new Set(Object.values(map)); let best=-1, bestN=0; const w=Math.max(...rows.map(r=>r.length));
+    for(let c=0;c<w;c++){ if(used.has(c)) continue; let n=0; for(let r=start;r<rows.length;r++){ const pd=parseDiam(rows[r][c]); if(pd.d!==null&&pd.d>0&&pd.d<1000) n++; } if(n>bestN){bestN=n;best=c;} }
+    if(best>=0) map.diam=best;
+  }
+  const recs=[]; let unknown=0, plusN=0; const byName=new Map(), conflicts=new Map(), unk=new Map();
+  for(let r=start;r<rows.length;r++){
+    const row=rows[r];
+    const stock=String(row[map.stock]??"").trim();
+    const codeText=map.code!==undefined?String(row[map.code]??"").trim():"";
+    const nameText=map.species!==undefined?String(row[map.species]??"").trim():"";
+    const pd=parseDiam(row[map.diam]); const d=pd.d;
+    if(!stock && !codeText && !nameText && d===null) continue;
+    if(pd.p) plusN++;
+    // The code decides. The name is only used when there is no (valid) code.
+    let res=codeText?matchSpecies(codeText):null;
+    if((!res||!res.s) && nameText) res=matchSpecies(nameText);
+    const sp=res&&res.s?res.s:null;
+    if(sp && res.how!=="code"){ const k=`${res.via} → ${sp.code} (${sp.name})${res.how==="altcode"?" · old code":res.how==="spelling"?" · spelling":""}`; byName.set(k,(byName.get(k)||0)+1); }
+    if(sp && codeText && nameText && res.how==="code"){ const nm=matchSpecies(nameText); if(nm&&nm.s&&nm.s!==sp){ const k=`${codeText} + "${nameText}" → used code ${sp.code} (${sp.name})`; conflicts.set(k,(conflicts.get(k)||0)+1); } }
+    if(!sp){ unknown++; const k=[codeText,nameText].filter(Boolean).join(" / ")||"(blank)"; unk.set(k,(unk.get(k)||0)+1); }
+    let y=false;
+    if(map.yield!==undefined){ const v=String(row[map.yield]??"").trim().toLowerCase(); y=/^(y|yes|1|true|yield|x|✓|✔|f|fell)/.test(v); }
+    recs.push({stock, sp: sp?sp.code:(codeText||nameText), d, p:pd.p, y});
+  }
+  if(!recs.length){ toast("No tree rows found"); return; }
+  if(byName.size||conflicts.size||unk.size){
+    const li=m=>[...m.entries()].slice(0,40).map(([k,n])=>`<li>${esc(k)}${n>1?` <span class="muted">×${n}</span>`:""}</li>`).join("");
+    const r=await modal("Check species matching",
+      (byName.size?`<p><b>Matched by local name, spelling or old code</b> (no current code given). Please check:</p><ul class="small">${li(byName)}</ul>`:"")+
+      (conflicts.size?`<p><b>Code and name disagree.</b> The code was used:</p><ul class="small">${li(conflicts)}</ul>`:"")+
+      (unk.size?`<p style="color:#b3261e"><b>Not recognised</b> (these rows will be highlighted):</p><ul class="small">${li(unk)}</ul>`:""),
+      [{label:"Cancel",value:0},{label:"Continue",value:1,cls:"primary"}]);
+    if(!r.value) return;
+  }
+  let mode="replace";
+  if(state.trees.length){
+    const r=await modal("Import trees", `<p>Found <b>${recs.length}</b> trees to import. You already have <b>${state.trees.length}</b> trees.</p>`,
+      [{label:"Cancel",value:null},{label:"Add to existing",value:"append"},{label:"Replace existing",value:"replace",cls:"primary"}]);
+    if(!r.value) return; mode=r.value;
+  }
+  if(mode==="replace") state.trees=[];
+  recs.forEach(x=>state.trees.push({id:state.nextId++,...x}));
+  save(); renderTrees(); renderSpecies(); resetEntry();
+  const noD=recs.filter(x=>x.d===null).length;
+  toast(`Imported ${recs.length} trees`+(plusN?` · ${plusN} recorded as 150+`:"")+(unknown?` · ${unknown} with unknown species (highlighted)`:"")+(noD?` · ${noD} with a blank diameter (highlighted)`:""),5000);
+}
+
+/* =====================================================================
+   SPECIES IMPORT
+   ===================================================================== */
+const SP_COLS = {
+  altCodes:[/other\s*code|old\s*code|alt.*code/],
+  alt:[/other|alias|also|spelling|synonym|alternat/],
+  code:[/code|abbr|abvr|short/],
+  name:[/report|local|common|trade|^name|species|pilot/],
+  group:[/fell|group|mfd|limit|min|class|diam|cat/],
+  sci:[/scien|botan|latin/]
+};
+async function importSpeciesRows(rows){
+  let m=mapColumns(rows,SP_COLS);
+  if(!m) m={map:{code:0,name:1,group:2,sci:3},start:0};
+  const {map,start}=m; const recs=[];
+  for(let r=start;r<rows.length;r++){
+    const row=rows[r];
+    const code=String(row[map.code]??"").trim(), name=String(row[map.name]??"").trim();
+    if(!code && !name) continue;
+    const parts=nameParts(name);
+    recs.push(cleanSpecies({code: code||parts[0]||name, name: parts[0]||name, alt:[...parts.slice(1), ...splitList(map.alt!==undefined?row[map.alt]:"")],
+      group: map.group!==undefined?toNum(row[map.group]):null, sci: map.sci!==undefined?String(row[map.sci]??"").trim():"", altCodes: map.altCodes!==undefined?row[map.altCodes]:""}));
+  }
+  if(!recs.length){ toast("No species rows found"); return; }
+  const r=await modal("Import species", `<p>Found <b>${recs.length}</b> species. The current list has <b>${state.species.length}</b>.</p><p class="small muted">"Merge" updates matching codes and adds new ones. "Replace" swaps in the new list completely.</p>`,
+    [{label:"Cancel",value:null},{label:"Merge",value:"merge"},{label:"Replace list",value:"replace",cls:"primary"}]);
+  if(!r.value) return;
+  if(r.value==="replace") state.species=recs;
+  else{
+    const idx=new Map(state.species.map((s,i)=>[s.code.toLowerCase(),i]));
+    recs.forEach(x=>{ const i=idx.get(x.code.toLowerCase());
+      if(i!==undefined){ const old=state.species[i];
+        // keep every known name: the old report name and old other names become other names
+        const alt=[...x.alt, old.name, ...(old.alt||[])].filter(n=>nameKey(n)&&nameKey(n)!==nameKey(x.name));
+        x.alt=[...new Map(alt.map(n=>[nameKey(n),n])).values()];
+        x.altCodes=[...new Set([...(x.altCodes||[]),...(old.altCodes||[])])];
+        if(x.group===null) x.group=old.group; if(!x.sci) x.sci=old.sci;
+        state.species[i]=x; }
+      else state.species.push(x); });
+  }
+  spIdx=null; relinkTrees();
+  save(); renderSpecies(); renderTrees();
+  const noGroup=recs.filter(x=>x.group===null).length;
+  toast(`Imported ${recs.length} species`+(noGroup?` · ${noGroup} without a felling group`:""),4000);
+}
+
+/* =====================================================================
+   RENDER: PROJECT & SETTINGS
+   ===================================================================== */
+function renderProject(){
+  $("pLocation").value=state.project.location; $("pCompany").value=state.project.company;
+  $("pDistrict").value=state.project.district; $("pExtra").value=state.project.extra; $("pSeries").value=state.project.series||"";
+  $("sMin").value=state.settings.minD; $("sWidth").value=state.settings.width; $("sN").value=state.settings.n;
+  $("paper").value=state.settings.paper; $("colOrder").value=state.settings.nameFirst?"name":"code"; $("allYield").checked=state.allYield;
+  $("classPreview").textContent=getClasses().map(c=>c.label).join(", ");
+  applyPaper();
+}
+function applyPaper(){
+  const p=state.settings.paper==="letter"?"letter":"A4";
+  $("pageStyle").textContent=`@page { size: ${p} landscape; margin: 0; }`;
+}
+
+/* =====================================================================
+   RENDER: SPECIES TABLE
+   ===================================================================== */
+function renderSpecies(){
+  const f=$("spFilter").value.trim().toLowerCase();
+  const counts={}; state.trees.forEach(t=>{ const k=t.sp.toLowerCase(); counts[k]=(counts[k]||0)+1; });
+  const show=$("spShow").value;
+  const rows=state.species.map((s,i)=>({s,i,src:spSource(s)})).filter(({src})=>!show||(show==="changed"?src!=="official":src===show)).filter(({s})=>!f||(s.code+" "+s.name+" "+(s.alt||[]).join(" ")+" "+(s.altCodes||[]).join(" ")+" "+s.sci+" "+(s.group??"")).toLowerCase().includes(f) || (f.length>=3 && matchSpecies(f)?.s===s));
+  $("spTable").tBodies[0].innerHTML = rows.map(({s,i,src})=>`<tr data-i="${i}" class="${s.group===null?'warn':''}">
+      <td><input type="text" data-k="code" value="${esc(s.code)}">${src==="mine"?'<span class="tag green">added</span>':src==="edited"?'<span class="tag amber">edited</span>':""}</td>
+      <td><input type="text" data-k="name" value="${esc(s.name)}"></td>
+      <td><input type="text" data-k="alt" value="${esc((s.alt||[]).join(", "))}"></td>
+      <td><input type="text" data-k="altCodes" value="${esc((s.altCodes||[]).join(", "))}"></td>
+      <td><input type="number" data-k="group" value="${s.group??""}" placeholder="e.g. 70"></td>
+      <td><input type="text" data-k="sci" value="${esc(s.sci)}" style="font-style:italic"></td>
+      <td class="num">${counts[s.code.toLowerCase()]||""}</td>
+      <td><button class="btn sm danger" data-del="${i}" title="Delete">✕</button></td></tr>`).join("")
+    || `<tr><td colspan="8" class="muted" style="padding:16px;text-align:center">${show?"None yet.":"No species. Import your species list or add one."}</td></tr>`;
+  const nm=state.species.filter(s=>spSource(s)==="mine").length, ne=state.species.filter(s=>spSource(s)==="edited").length;
+  $("spCount").textContent=`(${state.species.length} species`+(nm?` · ${nm} added`:"")+(ne?` · ${ne} edited`:"")+")";
+}
+$("spTable").addEventListener("change",e=>{
+  const inp=e.target; const tr=inp.closest("tr"); if(!tr||!inp.dataset.k) return;
+  const s=state.species[+tr.dataset.i]; const k=inp.dataset.k;
+  if(k==="code"){
+    const nv=inp.value.trim(); if(!nv){ inp.value=s.code; return; }
+    if(state.species.some(o=>o!==s && o.code.toLowerCase()===nv.toLowerCase())){ toast("That code already exists"); inp.value=s.code; return; }
+    state.trees.forEach(t=>{ if(t.sp.toLowerCase()===s.code.toLowerCase()) t.sp=nv; });
+    s.code=nv;
+  } else if(k==="group"){ s.group=toNum(inp.value); tr.classList.toggle("warn",s.group===null); }
+  else if(k==="alt"||k==="altCodes"){ s[k]=splitList(inp.value); inp.value=s[k].join(", "); }
+  else s[k]=inp.value.trim();
+  save(); relinkTrees(); save(); renderTrees(); flashSaved();
+  const tag=tr.querySelector(".tag"); const src=spSource(s); if(tag) tag.remove();
+  if(src!=="official") inp.closest("tr").cells[0].insertAdjacentHTML("beforeend",src==="mine"?'<span class="tag green">added</span>':'<span class="tag amber">edited</span>');
+  const clash=nameClashes(); if(clash.length) toast("⚠ Same name used for more than one code: "+clash.slice(0,3).join("; "),5000);
+});
+$("spTable").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-del]"); if(!b) return;
+  const i=+b.dataset.del; const s=state.species[i];
+  const used=state.trees.filter(t=>t.sp.toLowerCase()===s.code.toLowerCase()).length;
+  if(used){ const r=await modal("Delete species",`<p><b>${esc(s.code)} – ${esc(s.name)}</b> is used by ${used} tree(s). They will show as "unknown species" until you fix them.</p>`,[{label:"Cancel",value:0},{label:"Delete",value:1,cls:"danger"}]); if(!r.value) return; }
+  state.species.splice(i,1); save(); renderSpecies(); renderTrees();
+});
+async function addSpeciesForm(){
+  let v={code:"",name:"",group:"",alt:"",sci:""}, err="";
+  for(;;){
+    const r=await modal("Add a species",`<div class="spform">
+      ${err?`<div class="err">${esc(err)}</div>`:""}
+      <label>Code (abvr) *<input name="code" value="${esc(v.code)}" autocomplete="off"></label>
+      <label>Report name (prints) *<input name="name" value="${esc(v.name)}" autocomplete="off"></label>
+      <label>Felling limit (cm) *<input name="group" value="${esc(v.group)}" inputmode="numeric" list="fellLimits" autocomplete="off"></label>
+      <label>Scientific name<input name="sci" value="${esc(v.sci)}" autocomplete="off" style="font-style:italic"></label>
+      <label class="full">Other local names &amp; spellings <span class="muted">(comma separated, optional)</span><input name="alt" value="${esc(v.alt)}" autocomplete="off"></label>
+      <datalist id="fellLimits"><option value="110"><option value="90"><option value="70"><option value="50"><option value="30"><option value="20"></datalist>
+      <div class="full small muted">The species is saved permanently on this device and appears in the species drop-down straight away.</div></div>`,
+      [{label:"Cancel",value:0},{label:"Add species",value:1,cls:"primary"}]);
+    if(!r.value) return;
+    v=r.vals; const code=v.code.trim(), name=v.name.trim(), group=toNum(v.group);
+    const ex=state.species.find(o=>o.code.toLowerCase()===code.toLowerCase());
+    if(!code) err="Please enter a code.";
+    else if(ex) err=`Code "${code}" is already used by ${ex.name||"another species"}. Edit that row instead, or choose another code.`;
+    else if(!name) err="Please enter the report name.";
+    else if(group===null) err="Please enter the felling limit (e.g. 110, 90, 70 or 50).";
+    else {
+      const sp=cleanSpecies({code,name,alt:v.alt,group,sci:v.sci.trim(),altCodes:[]});
+      state.species.push(sp); spIdx=null; relinkTrees(); saveNow(); $("spFilter").value=""; renderSpecies(); renderTrees(); flashSaved();
+      const row=[...$("spTable").tBodies[0].rows].find(tr=>state.species[+tr.dataset.i]===sp); if(row){ row.scrollIntoView({block:"center"}); row.classList.add("editing"); setTimeout(()=>row.classList.remove("editing"),2500); }
+      toast(`Added ${code} – ${name}. Saved on this device.`,3500);
+      const clash=nameClashes(); if(clash.length) toast("⚠ Same name used for more than one code: "+clash.slice(0,3).join("; "),5000);
+      return;
+    }
+  }
+}
+$("btnAddSpecies").onclick=addSpeciesForm;
+function flashSaved(){ const el=$("spSaved"); if(!el) return; el.textContent="✓ Saved"; clearTimeout(flashSaved.t); flashSaved.t=setTimeout(()=>el.textContent="✓ Your changes are saved on this device",1800); }
+$("spFilter").oninput=renderSpecies;
+$("spShow").onchange=renderSpecies;
+function nameClashes(){ const I=speciesIndex(), out=[]; I.names.forEach((set,k)=>{ if(set.size>1) out.push(`"${k}" → ${[...set].map(s=>s.code).join(", ")}`); }); return out; }
+$("btnResetSpecies").onclick=async()=>{
+  const ne=state.species.filter(s=>spSource(s)==="edited").length, nm=state.species.filter(s=>spSource(s)==="mine").length;
+  const r=await modal("Restore official species list",`<p>The official Appendix II list has ${DEFAULT_SPECIES.length} species. You have <b>${nm}</b> added and <b>${ne}</b> edited species.</p>
+    <p><b>Put back missing ones</b> only brings back official species you deleted. Your edits stay.</p><p><b>Undo my edits too</b> also returns every official species to its original details.</p><p class="small muted">Species you added are kept either way.</p>`,
+    [{label:"Cancel",value:0},{label:"Undo my edits too",value:2},{label:"Put back missing ones",value:1,cls:"primary"}]);
+  if(!r.value) return;
+  const cur=new Map(state.species.map(s=>[s.code.toLowerCase(),s]));
+  const fresh=x=>({...x,alt:[...x.alt],altCodes:[...x.altCodes]});
+  const official=DEFAULT_SPECIES.map(x=>{ const c=cur.get(x.code.toLowerCase()); return (r.value===1&&c)?c:fresh(x); });
+  const known=new Set(DEFAULT_SPECIES.map(x=>x.code.toLowerCase()));
+  const custom=state.species.filter(x=>!known.has(x.code.toLowerCase()) && !/^new\d*$/i.test(x.code));
+  state.species=official.concat(custom); spIdx=null; relinkTrees(); saveNow(); renderSpecies(); renderTrees(); toast(r.value===1?"Missing official species put back":"Official species restored to their original details");
+};
+
+/* =====================================================================
+   SPECIES COMBOBOX
+   ===================================================================== */
+let comboSel=null, comboHi=0, comboItems=[];
+function comboFilter(q){
+  q=q.trim();
+  const list=[...state.species].sort((a,b)=>a.code.localeCompare(b.code,undefined,{sensitivity:"base"}));
+  if(!q) return list.map(s=>({s}));
+  const ql=q.toLowerCase(), qk=nameKey(q), qs=skel(q);
+  const score=s=>{
+    const c=s.code.toLowerCase();
+    if(c===ql) return [0]; if((s.altCodes||[]).some(a=>a.toLowerCase()===ql)) return [0.5];
+    let best=[9];
+    allNames(s).forEach((n,i)=>{ const k=nameKey(n), sk=skel(n); const via=i===0?null:n; let sc=9;
+      if(k===qk) sc=1; else if(sk===qs) sc=1.5; else if(k.startsWith(qk)) sc=3; else if(sk.startsWith(qs)) sc=3.5;
+      else if(n.toLowerCase().split(/[\s(),\/-]+/).some(w=>w.startsWith(ql))) sc=4; else if(k.includes(qk)) sc=5;
+      if(sc<best[0]) best=[sc,via]; });
+    if(best[0]>2 && c.startsWith(ql)) best=[2];
+    if(best[0]===9 && (s.sci||"").toLowerCase().includes(ql)) best=[6,s.sci];
+    return best; };
+  let out=list.map(s=>{ const [sc,via]=score(s); return {s,sc,via}; }).filter(x=>x.sc<9).sort((a,b)=>a.sc-b.sc);
+  if(!out.length){ const m=matchSpecies(q); if(m&&m.s) out=[{s:m.s,via:m.matched||m.via,fuzzy:true}]; else if(m&&m.ambiguous) out=m.ambiguous.map(s=>({s,fuzzy:true})); }
+  return out;
+}
+function comboOpen(q){
+  const typed=(q??$("eSpecies").value).trim();
+  comboItems=othersMode&&typed==="Others"?comboFilter(""):comboFilter(q??$("eSpecies").value); comboHi=0;
+  const ul=$("spList");
+  const oi=comboItems.length; comboItems.push({others:true});
+  const othersLi=`<li data-i="${oi}" class="others ${oi===0?'hi':''}">＋ Others – ${typed&&!(othersMode&&typed==="Others")&&!comboItems[0].s?`add “${esc(typed)}” (not in the list)`:"species not in the list…"}</li>`;
+  ul.innerHTML = (oi? comboItems.slice(0,oi).map(({s,via,fuzzy},i)=>`<li data-i="${i}" class="${i===0?'hi':''}" title="${esc([s.name,...(s.alt||[])].join(" / ")+(s.sci?" — "+s.sci:""))}"><b>${esc(s.code)}</b>${esc(s.name)}${via&&nameKey(via)!==nameKey(s.name)?` <span class="via">${fuzzy?"≈ ":"= "}${esc(via)}</span>`:""}<span class="g">${s.group!==null?s.group+" cm":"no group"}</span></li>`).join("")
+    : `<li class="none">No matching species</li>`) + othersLi;
+  ul.classList.add("open");
+}
+function comboClose(){ $("spList").classList.remove("open"); }
+function comboChoose(item){ if(!item) return; if(item.others) openOthers(); else { comboPick(item.s); $("eDiam").focus(); } }
+function comboPick(s){
+  if(othersMode) closeOthers();
+  comboSel=s; $("eSpecies").value=s?`${s.code} – ${s.name}`:""; $("eName").value=s?s.name:""; $("eGroup").value=s&&s.group!==null?s.group+" cm":""; comboClose();
+}
+function comboMove(dir){
+  const lis=$("spList").querySelectorAll("li[data-i]"); if(!lis.length) return;
+  lis[comboHi]?.classList.remove("hi"); comboHi=(comboHi+dir+lis.length)%lis.length; lis[comboHi].classList.add("hi"); lis[comboHi].scrollIntoView({block:"nearest"});
+}
+$("eSpecies").addEventListener("input",()=>{ if(othersMode) closeOthers(); comboSel=null; $("eName").value=""; $("eGroup").value=""; comboOpen(); });
+$("eSpecies").addEventListener("focus",()=>{ $("eSpecies").select(); });
+$("eSpecies").addEventListener("keydown",e=>{
+  const open=$("spList").classList.contains("open");
+  if(e.key==="ArrowDown"){ e.preventDefault(); open?comboMove(1):comboOpen(""); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); if(open) comboMove(-1); }
+  else if(e.key==="Enter"){ e.preventDefault();
+    if(open && comboItems[comboHi]){ comboChoose(comboItems[comboHi]); return; }
+    else if(!comboSel && !othersMode){ const s=findSpecies($("eSpecies").value); if(s) comboPick(s); }
+    if(comboSel) $("eDiam").focus(); else if(othersMode) $("eName").focus(); }
+  else if(e.key==="Escape"){ comboClose(); }
+  else if(e.key==="Tab"){ if(open && comboItems[comboHi] && $("eSpecies").value.trim() && !comboItems[comboHi].others) comboPick(comboItems[comboHi].s); else comboClose(); }
+});
+$("eSpecies").addEventListener("blur",()=>setTimeout(()=>{
+  if(!comboSel && !othersMode){ const s=findSpecies($("eSpecies").value); if(s) comboPick(s); }
+  comboClose();
+},150));
+$("spList").addEventListener("mousedown",e=>{ const li=e.target.closest("li[data-i]"); if(!li) return; e.preventDefault(); comboChoose(comboItems[+li.dataset.i]); });
+
+/* ---------- "Others": a species that is not in the list ---------- */
+var othersMode=false;
+function openOthers(){
+  const typed=$("eSpecies").value.trim(); const pre=typed&&typed!=="Others"&&!/ – /.test(typed)?typed:"";
+  comboClose(); comboSel=null; othersMode=true;
+  $("eSpecies").value="Others"; $("othersPanel").style.display="";
+  othersEditable(true);
+  $("eName").value=pre? pre.charAt(0).toUpperCase()+pre.slice(1) : ""; $("eGroup").value="";
+  othersCheck(); $("eName").focus(); $("eName").select();
+}
+function closeOthers(clear){
+  othersMode=false; $("othersPanel").style.display="none";
+  othersEditable(false);
+  if(clear!==false){ ["oCode","oSci"].forEach(id=>$(id).value=""); }
+  $("oMsg").textContent=""; $("oMsg").className="";
+  if($("eSpecies").value==="Others"){ $("eSpecies").value=""; $("eName").value=""; $("eGroup").value=""; }
+}
+// Local name and Felling group become typeable boxes while "Others" is selected
+function othersEditable(on){
+  ["eName","eGroup"].forEach(id=>{ const el=$(id); el.readOnly=!on; el.tabIndex=on?0:-1; el.classList.toggle("othersEdit",on); });
+  if(on) $("eGroup").setAttribute("list","fellLimitsMain"); else $("eGroup").removeAttribute("list");
+  $("eNameLbl").textContent=on?"Local name * (type here)":"Local name"; $("eGroupLbl").textContent=on?"Felling group *":"Felling group";
+}
+function makeCode(name){
+  const L=String(name).replace(/[^A-Za-z]/g,""); let base=L? L.charAt(0).toUpperCase()+L.slice(1,3).toLowerCase() : "Oth";
+  const used=new Set(state.species.flatMap(s=>[s.code,...(s.altCodes||[])].map(c=>String(c).toLowerCase())));
+  let c=base, n=2; while(used.has(c.toLowerCase())) c=base+(n++); return c;
+}
+// warn if the name or code is already in the list
+function othersCheck(){
+  const msg=$("oMsg"); msg.className=""; msg.innerHTML="";
+  const name=$("eName").value.trim(), code=$("oCode").value.trim();
+  if(code){ const I=speciesIndex(); const s=state.species.find(x=>x.code.toLowerCase()===code.toLowerCase()||(x.altCodes||[]).some(a=>a.toLowerCase()===code.toLowerCase()));
+    if(s){ msg.className="err"; msg.innerHTML=`Code “${esc(code)}” is already ${esc(s.code)} – ${esc(s.name)}. <button class="btn sm" type="button" data-use="${esc(s.code)}">Use ${esc(s.code)} – ${esc(s.name)}</button>`; return s; } }
+  if(name.length>=3){ const m=matchSpecies(name);
+    if(m&&m.s){ msg.className="err"; msg.innerHTML=`“${esc(name)}” is already in the list as <b>${esc(m.s.code)} – ${esc(m.s.name)}</b>${m.fuzzy||m.how==="fuzzy"?" (similar spelling)":""}. <button class="btn sm" type="button" data-use="${esc(m.s.code)}">Use ${esc(m.s.code)} – ${esc(m.s.name)}</button><button class="btn sm" type="button" data-keep>No, it's a different species</button>`; return m.s; } }
+  if(name) msg.innerHTML=`<span class="muted">New species: <b>${esc(code||makeCode(name))}</b> – ${esc(name)}${toNum($("eGroup").value)!==null?` · ${toNum($("eGroup").value)} cm group`:""}</span>`;
+  return null;
+}
+var othersForce=false;
+["eName","oCode"].forEach(id=>$(id).addEventListener("input",()=>{ if(!othersMode) return; othersForce=false; othersCheck(); }));
+$("eGroup").addEventListener("input",()=>{ if(othersMode) othersCheck(); });
+["eName","eGroup","oCode","oSci"].forEach(id=>$(id).addEventListener("keydown",e=>{ if(e.key==="Enter"&&othersMode){ e.preventDefault(); if(!$("eName").value.trim()) $("eName").focus(); else if(toNum($("eGroup").value)===null) $("eGroup").focus(); else if($("ePlus").checked) submitEntry(); else $("eDiam").focus(); } }));
+$("oMsg").addEventListener("click",e=>{
+  const u=e.target.closest("[data-use]"); if(u){ const s=state.species.find(x=>x.code===u.dataset.use); closeOthers(); comboPick(s); $("eDiam").focus(); return; }
+  if(e.target.closest("[data-keep]")){ othersForce=true; $("oMsg").className=""; $("oMsg").innerHTML=`<span class="muted">OK – it will be added as a new species: <b>${esc($("oCode").value.trim()||makeCode($("eName").value))}</b> – ${esc($("eName").value.trim())}</span>`; }
+});
+$("oCancel").onclick=()=>{ closeOthers(); $("eSpecies").focus(); };
+// called by Add tree: creates the new species (saved permanently) and returns it, or null if something is missing
+function othersCreate(){
+  const name=$("eName").value.trim(), codeIn=$("oCode").value.trim(), group=toNum($("eGroup").value);
+  if(!name){ toast("Type the local name of the species"); $("eName").focus(); return null; }
+  if(group===null||group<=0){ toast("Type the felling group (e.g. 110, 90, 70 or 50)"); $("eGroup").focus(); return null; }
+  const clash=othersCheck();
+  if(clash && (codeIn && state.species.some(x=>x.code.toLowerCase()===codeIn.toLowerCase()||(x.altCodes||[]).some(a=>a.toLowerCase()===codeIn.toLowerCase())))){ toast("That code is already used – change it or leave it blank"); $("oCode").focus(); return null; }
+  if(clash && !othersForce){ toast("This species is already in the list – click “Use” or “No, it's a different species”",4500); return null; }
+  const sp=cleanSpecies({code:codeIn||makeCode(name), name, alt:[], group, sci:$("oSci").value.trim(), altCodes:[]});
+  state.species.push(sp); spIdx=null; saveNow();
+  return sp;
+}
+$("spArrow").addEventListener("mousedown",e=>{ e.preventDefault(); if($("spList").classList.contains("open")) comboClose(); else { $("eSpecies").focus(); comboOpen(""); } });
+
+/* =====================================================================
+   ENTRY FORM
+   ===================================================================== */
+function nextStock(){
+  if(!state.trees.length) return "1";
+  const last=state.trees[state.trees.length-1].stock;
+  const nums=state.trees.map(t=>/^\d+$/.test(t.stock)?+t.stock:NaN).filter(n=>!isNaN(n));
+  if(/^\d+$/.test(last) && nums.length) return String(Math.max(...nums)+1);
+  const m=String(last).match(/^(.*?)(\d+)$/); if(m) return m[1]+(+m[2]+1);
+  return "";
+}
+function resetEntry(keepFocus){
+  editingId=null; $("btnAdd").textContent="＋ Add tree"; $("btnCancelEdit").style.display="none";
+  $("eStock").value=nextStock(); setPlus(false); $("eDiam").value=""; comboPick(null);
+  $("eYield").disabled=state.allYield; if(state.allYield) $("eYield").checked=true;
+  document.querySelectorAll("#treeTable tr.editing").forEach(r=>r.classList.remove("editing"));
+  if(keepFocus) $("eSpecies").focus();
+}
+function submitEntry(){
+  const stock=$("eStock").value.trim(); const pd=$("ePlus").checked? {d:Math.max(150,toNum($("eDiam").value)||150),p:true} : parseDiam($("eDiam").value); const d=pd.d, p=pd.p;
+  if(!comboSel && !othersMode){ const s=findSpecies($("eSpecies").value); if(s) comboPick(s); }
+  if(!stock){ toast("Enter a stock number"); $("eStock").focus(); return; }
+  if(!comboSel && !othersMode){ toast("Select a species from the list, or choose Others"); $("eSpecies").focus(); return; }
+  if(d===null||d<=0){ toast("Enter the diameter, or tick 150+"); $("eDiam").focus(); return; }
+  let newSp=null;
+  if(othersMode){ newSp=othersCreate(); if(!newSp) return; closeOthers(); comboSel=newSp; othersForce=false; }
+  const y=state.allYield? true : $("eYield").checked;
+  const dup=state.trees.find(t=>t.stock.toLowerCase()===stock.toLowerCase() && t.id!==editingId);
+  if(editingId!==null){
+    const t=state.trees.find(t=>t.id===editingId); Object.assign(t,{stock,sp:comboSel.code,d,p,y: state.allYield? t.y : y});
+    toast(`Updated stock no. ${stock}`);
+  } else {
+    state.trees.push({id:state.nextId++,stock,sp:comboSel.code,d,p,y});
+    if(dup) toast(`⚠ Stock no. ${stock} already exists (duplicate highlighted)`,3500);
+  }
+  save(); renderTrees(); renderSpecies(); resetEntry(true);
+  if(newSp) toast(`Tree added · new species ${newSp.code} – ${newSp.name} (${newSp.group} cm) saved to your species list`,4500);
+  const tw=document.querySelector("#tab-data .tablewrap"); if(editingId===null) tw.scrollTop=tw.scrollHeight;
+}
+$("btnAdd").onclick=submitEntry;
+$("btnCancelEdit").onclick=()=>resetEntry(true);
+$("eDiam").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submitEntry(); } });
+function setPlus(on){ $("ePlus").checked=on; $("plusBox").classList.toggle("on",on); const di=$("eDiam"); di.disabled=on; if(on) di.value="150+"; else if(di.value==="150+") di.value=""; }
+$("ePlus").addEventListener("change",e=>{ setPlus(e.target.checked); if(e.target.checked) $("btnAdd").focus(); else $("eDiam").focus(); });
+$("ePlus").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submitEntry(); } });
+$("eDiam").addEventListener("input",e=>{ const v=e.target.value.trim(); if(/^(150\s*\+|\+\s*150|>\s*=?\s*150|≥\s*150)$/.test(v)){ setPlus(true); $("btnAdd").focus(); } });
+$("eStock").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("eSpecies").focus(); } });
+
+/* =====================================================================
+   TREE TABLE & VALIDATION
+   ===================================================================== */
+function validate(){
+  const smap=speciesMap(); const seen=new Map(); const res={dup:new Set(),unknown:[],badD:[],small:[],noGroup:[]};
+  state.trees.forEach(t=>{ const k=t.stock.toLowerCase(); if(seen.has(k)){ res.dup.add(k); } else seen.set(k,1); });
+  state.trees.forEach(t=>{
+    const s=smap.get(t.sp.toLowerCase());
+    if(!s) res.unknown.push(t); else if(s.group===null) res.noGroup.push(t);
+    if(t.d===null||t.d<=0) res.badD.push(t); else if(t.d<state.settings.minD) res.small.push(t);
+  });
+  return res;
+}
+function renderTrees(){
+  const v=validate(); const smap=speciesMap(); const classes=getClasses();
+  const f=$("treeFilter").value.trim().toLowerCase();
+  const html=[]; let shown=0;
+  state.trees.forEach((t,i)=>{
+    const s=smap.get(t.sp.toLowerCase());
+    const ci=classIndex(t.d);
+    if(f){ const hay=`${t.stock} ${t.sp} ${s?s.name:""} ${diamText(t)} ${ci>=0?classes[ci].label:""}`.toLowerCase(); if(!hay.includes(f)) return; }
+    shown++;
+    const isDup=v.dup.has(t.stock.toLowerCase());
+    const err=!s||t.d===null||t.d<=0; const warn=isDup||(t.d!==null&&t.d<state.settings.minD)||(s&&s.group===null);
+    const tags=[]; if(!s) tags.push('<span class="tag red">unknown species</span>'); if(isDup) tags.push('<span class="tag amber">duplicate</span>');
+    if(t.d!==null&&t.d>0&&t.d<state.settings.minD) tags.push(`<span class="tag amber">&lt; ${state.settings.minD} cm</span>`);
+    if(t.d===null||t.d<=0) tags.push('<span class="tag red">no diameter</span>');
+    html.push(`<tr data-id="${t.id}" class="${err?'err':warn?'warn':''} ${t.id===editingId?'editing':''}">
+      <td class="num muted">${i+1}</td><td><b>${esc(t.stock)}</b></td><td>${esc(t.sp)}</td><td>${s?esc(s.name):""} ${tags.join(" ")}</td>
+      <td class="c">${s&&s.group!==null?s.group:""}</td><td class="num">${t.p?`<b>${esc(diamText(t))}</b>`:(t.d??"")}</td><td class="c">${ci>=0?classes[ci].label:"–"}</td>
+      <td class="c"><input type="checkbox" data-y ${isYield(t)?"checked":""} ${state.allYield?"disabled":""} style="width:16px;height:16px;accent-color:#2e7d4f"></td>
+      <td style="white-space:nowrap"><button class="btn sm" data-edit>Edit</button> <button class="btn sm danger" data-del title="Delete">✕</button></td></tr>`);
+  });
+  $("treeTable").tBodies[0].innerHTML = html.join("") || `<tr><td colspan="9" class="muted" style="padding:20px;text-align:center">${state.trees.length?"No trees match the filter.":"No trees yet. Enter trees above, or import an Excel/CSV file."}</td></tr>`;
+  const yc=state.trees.filter(isYield).length;
+  $("treeCount").textContent=state.trees.length?`(${state.trees.length} trees · ${yc} yield · ${state.trees.length-yc} retained${f?` · showing ${shown}`:""})`:"";
+  // warnings
+  const w=[];
+  if(v.unknown.length) w.push(`<b>${v.unknown.length}</b> tree(s) have a species not in the species list. They are left out of the reports: ${v.unknown.slice(0,15).map(t=>esc(t.stock)+" ("+esc(t.sp||"blank")+")").join(", ")}${v.unknown.length>15?"…":""}`);
+  if(v.badD.length) w.push(`<b>${v.badD.length}</b> tree(s) have no valid diameter: ${v.badD.slice(0,20).map(t=>esc(t.stock)).join(", ")}`);
+  const w2=[];
+  if(v.dup.size) w2.push(`Duplicate stock numbers: ${[...v.dup].slice(0,20).map(esc).join(", ")}${v.dup.size>20?"…":""}`);
+  if(v.small.length) w2.push(`<b>${v.small.length}</b> tree(s) are below ${state.settings.minD} cm and are left out of the reports: ${v.small.slice(0,20).map(t=>esc(t.stock)).join(", ")}`);
+  if(v.noGroup.length) w2.push(`<b>${v.noGroup.length}</b> tree(s) belong to species without a felling group (set it in the Species List tab).`);
+  $("warnings").innerHTML = (w.length?`<div class="warnbox err">⛔ Please fix:<ul>${w.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:"")
+    + (w2.length?`<div class="warnbox warn">⚠ Check:<ul>${w2.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:"");
+  $("eYield").disabled=state.allYield; if(state.allYield) $("eYield").checked=true;
+}
+$("treeTable").addEventListener("click",async e=>{
+  const tr=e.target.closest("tr[data-id]"); if(!tr) return; const id=+tr.dataset.id; const t=state.trees.find(x=>x.id===id);
+  if(e.target.matches("[data-y]")){ t.y=e.target.checked; save(); renderTrees(); return; }
+  if(e.target.closest("[data-del]")){ state.trees=state.trees.filter(x=>x.id!==id); if(editingId===id) resetEntry(); save(); renderTrees(); renderSpecies(); toast(`Deleted stock no. ${t.stock}`); return; }
+  if(e.target.closest("[data-edit]")){
+    editingId=id; $("eStock").value=t.stock; setPlus(false); $("eDiam").value=t.d??""; if(t.p) setPlus(true);
+    const s=findSpecies(t.sp); comboPick(s); if(!s) $("eSpecies").value=t.sp;
+    $("eYield").checked=isYield(t);
+    $("btnAdd").textContent="✔ Update tree"; $("btnCancelEdit").style.display="";
+    document.querySelectorAll("#treeTable tr.editing").forEach(r=>r.classList.remove("editing")); tr.classList.add("editing");
+    window.scrollTo({top:$("eStock").getBoundingClientRect().top+window.scrollY-120,behavior:"smooth"}); $("eDiam").focus();
+  }
+});
+$("treeFilter").oninput=renderTrees;
+$("allYield").onchange=e=>{ state.allYield=e.target.checked; if(!state.allYield) $("eYield").checked=false; save(); renderTrees(); toast(state.allYield?"All stock is now marked as yield":"Using individual Yield ticks"); };
+$("btnAutoMark").onclick=()=>{
+  if(state.allYield){ toast('Untick "Mark ALL stock as yield" first'); return; }
+  const smap=speciesMap(); let n=0;
+  state.trees.forEach(t=>{ const s=smap.get(t.sp.toLowerCase()); t.y=!!(s&&s.group!==null&&t.d!==null&&t.d>=s.group); if(t.y) n++; });
+  save(); renderTrees(); toast(`${n} trees at or above their felling limit marked as yield`);
+};
+$("btnClearMarks").onclick=()=>{ if(state.allYield){ toast('Untick "Mark ALL stock as yield" first'); return; } state.trees.forEach(t=>t.y=false); save(); renderTrees(); };
+$("btnSortTrees").onclick=()=>{ state.trees.sort((a,b)=>cmpStock(a.stock,b.stock)); save(); renderTrees(); toast("Sorted by stock number"); };
+$("btnClearTrees").onclick=async()=>{
+  if(!state.trees.length) return;
+  const r=await modal("Clear all trees",`<p>Delete all <b>${state.trees.length}</b> trees? Save the project first if you want a backup.</p>`,[{label:"Cancel",value:0},{label:"Delete all",value:1,cls:"danger"}]);
+  if(r.value){ state.trees=[]; save(); renderTrees(); renderSpecies(); resetEntry(); }
+};
+$("btnExportTrees").onclick=()=>{
+  const smap=speciesMap();
+  download("tree_data.csv", toCSV([["Stock No","Species Code","Local Name","Diameter (cm)","Yield"],
+    ...state.trees.map(t=>{const s=smap.get(t.sp.toLowerCase()); return [t.stock,t.sp,s?s.name:"",diamText(t),isYield(t)?"Y":"N"];})]));
+};
+$("dlTreeTemplate").onclick=e=>{ e.preventDefault(); download("tree_data_template.csv", toCSV([["Stock No","Species","Diameter (cm)","Yield (Y/N)"],["1","Cem","62","Y"],["2","Bbu","84","N"],["3","Ant","150+","Y"]])); };
+$("btnImportTrees").onclick=()=>$("fileTrees").click();
+$("fileTrees").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; try{ await importTreeRows(await readTableFile(f)); }catch(err){ modal("Import failed",`<p>${esc(err.message)}</p>`,[{label:"OK",value:1,cls:"primary"}]); } };
+$("btnPasteTrees").onclick=async()=>{
+  const r=await modal("Paste tree data",`<p class="small muted">Copy the cells from Excel (Stock No, Species, Diameter, optional Yield), with or without the header row, and paste them below.</p><textarea placeholder="Paste here…"></textarea>`,[{label:"Cancel",value:0},{label:"Import",value:1,cls:"primary"}]);
+  if(r.value && r.text.trim()) importTreeRows(parseDelimited(r.text));
+};
+$("loadDemo").onclick=async e=>{
+  e.preventDefault();
+  if(state.trees.length){ const r=await modal("Load demo data",`<p>This replaces your current ${state.trees.length} trees with the 144 demo trees rebuilt from your sample reports.</p>`,[{label:"Cancel",value:0},{label:"Load demo",value:1,cls:"primary"}]); if(!r.value) return; }
+  // make sure demo species exist
+  const smap=speciesMap(); DEFAULT_SPECIES.forEach(s=>{ if(!smap.has(s.code.toLowerCase())) state.species.push({...s}); });
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const trees=[];
+  for(const [sp,cls] of Object.entries(DEMO)) for(const [lo,nums] of Object.entries(cls)) nums.forEach(n=>{
+    const span=(+lo===150)?40:19; trees.push({stock:String(n),sp,d:Math.round(+lo+rnd()*span),y:true}); });
+  trees.sort((a,b)=>+a.stock-+b.stock);
+  state.trees=trees.map(t=>({id:state.nextId++,...t})); state.allYield=true;
+  if(!state.project.location){ Object.assign(state.project,{location:"Essunkrom/Yaw Owusukrom Off-Reserve",company:"Mbaza Company Limited",district:"Bekwai Forest District"}); }
+  save(); renderAll(); resetEntry(); toast("Demo data loaded (144 trees)");
+};
+
+/* species file actions */
+$("btnImportSpecies").onclick=()=>$("fileSpecies").click();
+$("fileSpecies").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; try{ await importSpeciesRows(await readTableFile(f)); }catch(err){ modal("Import failed",`<p>${esc(err.message)}</p>`,[{label:"OK",value:1,cls:"primary"}]); } };
+$("btnPasteSpecies").onclick=async()=>{
+  const r=await modal("Paste species list",`<p class="small muted">Copy the cells from Excel (Code, Local Name, Felling group, optional Scientific name) and paste them below.</p><textarea placeholder="Paste here…"></textarea>`,[{label:"Cancel",value:0},{label:"Import",value:1,cls:"primary"}]);
+  if(r.value && r.text.trim()) importSpeciesRows(parseDelimited(r.text));
+};
+$("btnExportSpecies").onclick=()=>download("species_list.csv", toCSV([["Code","Report Name","Other Names","Other Codes","Felling Limit (cm)","Scientific Name"],...state.species.map(s=>[s.code,s.name,(s.alt||[]).join("; "),(s.altCodes||[]).join("; "),s.group??"",s.sci])]));
+$("dlSpTemplate").onclick=e=>{ e.preventDefault(); download("species_template.csv", toCSV([["Code","Report Name","Other Names","Other Codes","Felling Limit (cm)","Scientific Name"],["Ant","Chenchen","Kyenkyen; Kyekyen","",90,"Antiaris toxicaria"],["Han","Hotrohotro","Fotie; Hannoa","Hak",70,"Hannoa klaineana"]])); };
+
+/* project inputs */
+[["pLocation","location"],["pCompany","company"],["pDistrict","district"],["pExtra","extra"],["pSeries","series"]].forEach(([id,k])=>{
+  $(id).addEventListener("input",e=>{ state.project[k]=e.target.value; save(); });
+});
+[["sMin","minD",0],["sWidth","width",1],["sN","n",1]].forEach(([id,k,min])=>{
+  $(id).addEventListener("change",e=>{ let v=Math.round(toNum(e.target.value)); if(isNaN(v)||v<min) v=freshState().settings[k]; if(k==="n") v=Math.min(v,15); state.settings[k]=v; save(); renderProject(); renderTrees(); });
+});
+$("paper").onchange=e=>{ state.settings.paper=e.target.value; save(); applyPaper(); renderReport(); };
+$("colOrder").onchange=e=>{ state.settings.nameFirst=e.target.value==="name"; save(); renderReport(); };
+
+/* =====================================================================
+   REPORTS
+   ===================================================================== */
+function paperDims(){ return state.settings.paper==="letter"?{w:279.4,h:215.9}:{w:297,h:210}; }
+const MARG={t:12,r:12,b:16,l:12}; // mm; bottom margin holds the page number
+
+function reportParts(kind){
+  const R=REPORTS[kind]; const classes=getClasses(); const nC=classes.length; const smap=speciesMap();
+  const nameFirst=!!state.settings.nameFirst;
+  const trees=state.trees.filter(t=>{ const s=smap.get(t.sp.toLowerCase()); return s && classIndex(t.d)>=0 && (!R.yield||isYield(t)); });
+  const groups=new Map(); // group -> species -> class -> [stock]
+  trees.forEach(t=>{
+    const s=smap.get(t.sp.toLowerCase()); const g=s.group===null?"none":s.group;
+    if(!groups.has(g)) groups.set(g,new Map());
+    const gm=groups.get(g); if(!gm.has(s.code)) gm.set(s.code,{s,cells:classes.map(()=>[])});
+    gm.get(s.code).cells[classIndex(t.d)].push(t.stock);
+  });
+  const gkeys=[...groups.keys()].sort((a,b)=>a==="none"?1:b==="none"?-1:b-a);
+  const heading=[R.title,state.project.company,state.project.location,state.project.district,state.project.extra,state.project.series]
+    .filter(x=>x&&x.trim()).map(x=>`<div>${esc(x.trim())}</div>`).join("");
+  const wCode=7, wName=14, wTot=7.5, wCls=((100-wCode-wName-wTot)/nC).toFixed(3);
+  const c1=nameFirst?wName:wCode, c2=nameFirst?wCode:wName;
+  const colg=`<colgroup><col style="width:${c1}%"><col style="width:${c2}%">${classes.map(()=>`<col style="width:${wCls}%">`).join("")}<col style="width:${wTot}%"></colgroup>`;
+  const h1=nameFirst?"SPECIES":"abvr", h2=nameFirst?"abvr":"SPECIES";
+  const thead=`<thead><tr><th>${h1}</th><th>${h2}</th>${classes.map(c=>`<th>${c.label}</th>`).join("")}<th>Total</th></tr></thead>`;
+  const rows=[]; const grand=classes.map(()=>0);
+  const sumRow=(cls,label,arr)=>`<tr class="${cls}"><td colspan="2" class="t">${label}</td>${arr.map(n=>`<td class="n">${n}</td>`).join("")}<td class="n">${arr.reduce((a,b)=>a+b,0)}</td></tr>`;
+  gkeys.forEach(g=>{
+    const gm=groups.get(g); const sub=classes.map(()=>0);
+    [...gm.values()].sort((a,b)=>a.s.code.localeCompare(b.s.code,undefined,{sensitivity:"base"})).forEach(({s,cells})=>{
+      let tot=0;
+      const tds=cells.map((arr,i)=>{ const n=arr.length; tot+=n; sub[i]+=n;
+        if(R.list) return `<td class="list">${n?arr.sort(cmpStock).map(esc).join(",<wbr>")+" ("+n+")":""}</td>`;
+        return `<td class="n">${n}</td>`; }).join("");
+      const a=`<td class="t">${esc(s.code)}</td>`, b=`<td class="t">${esc(s.name)}</td>`;
+      rows.push(`<tr>${nameFirst?b+a:a+b}${tds}<td class="n">${tot}</td></tr>`);
+    });
+    sub.forEach((n,i)=>grand[i]+=n);
+    rows.push(sumRow("sub", g==="none"?"Total (no felling group)":`Total ${g} CM`, sub));
+  });
+  if(gkeys.length) rows.push(sumRow("grand","Grand Total",grand));
+  else rows.push(`<tr><td colspan="${nC+3}" class="empty">No ${R.yield?"yield ":""}trees to report${R.yield&&state.trees.length?' (mark trees as Yield, or tick "Mark ALL stock as yield")':""}.</td></tr>`);
+  return {heading,colg,thead,rows};
+}
+
+// Lay the report out on real pages so each page gets "Page X of Y" and a repeated header
+function paginate(kind){
+  const P=reportParts(kind); const {w,h}=paperDims();
+  const cw=w-MARG.l-MARG.r, ch=h-MARG.t-MARG.b;
+  const m=$("measure");
+  m.innerHTML=`<div style="height:100mm" id="mmRef"></div><div class="report" style="width:${cw}mm"><div class="rtitle">${P.heading}</div><table class="rt">${P.colg}${P.thead}<tbody>${P.rows.join("")}</tbody></table></div>`;
+  const pxmm=m.querySelector("#mmRef").getBoundingClientRect().height/100;
+  const avail=ch*pxmm-6;
+  const titleH=m.querySelector(".rtitle").getBoundingClientRect().height;
+  const theadH=m.querySelector("thead").getBoundingClientRect().height;
+  const rh=[...m.querySelectorAll("tbody tr")].map(r=>r.getBoundingClientRect().height);
+  m.innerHTML="";
+  const pages=[]; let cur=[], used=titleH+theadH;
+  rh.forEach((hgt,i)=>{ if(cur.length && used+hgt>avail){ pages.push(cur); cur=[]; used=theadH; } cur.push(i); used+=hgt; });
+  pages.push(cur);
+  return pages.map((idx,pi)=>`<div class="page" style="width:${w}mm;height:${(h-0.8).toFixed(1)}mm;padding:${MARG.t}mm ${MARG.r}mm ${MARG.b}mm ${MARG.l}mm">
+    <div class="report">${pi===0?`<div class="rtitle">${P.heading}</div>`:""}<table class="rt">${P.colg}${P.thead}<tbody>${idx.map(i=>P.rows[i]).join("")}</tbody></table></div>
+    <div class="pfoot">Page ${pi+1} of ${pages.length}</div></div>`).join("");
+}
+const kindsFor=r=>r==="all"?Object.keys(REPORTS):[r];
+function renderReport(){
+  $("paper-preview").innerHTML=kindsFor(currentReport).map(paginate).join("");
+  const v=validate(); const excluded=v.unknown.length+v.badD.length+v.small.length;
+  const yc=state.trees.filter(isYield).length;
+  $("reportStatus").innerHTML=`${state.trees.length} trees in data · ${yc} yield${state.allYield?" (all stock marked as yield)":""}`
+    + (excluded?` · <span style="color:#b3261e">${excluded} tree(s) left out (unknown species, missing diameter or below ${state.settings.minD} cm). See the Tree Data tab.</span>`:"");
+}
+function printReports(kinds){
+  applyPaper();
+  $("printArea").innerHTML=kinds.map(paginate).join("");
+  setTimeout(()=>{ try{ window.print(); }catch(e){ $("iframeNote").style.display="block"; } },60);
+}
+$("rtabs").addEventListener("click",e=>{ const b=e.target.closest("button[data-r]"); if(!b) return;
+  currentReport=b.dataset.r; document.querySelectorAll("#rtabs button").forEach(x=>x.classList.toggle("active",x===b)); renderReport(); });
+$("btnPrint").onclick=()=>printReports(kindsFor(currentReport));
+$("btnPrintAll").onclick=()=>printReports(Object.keys(REPORTS));
+window.addEventListener("beforeprint",()=>{ if(!$("printArea").innerHTML.trim()) $("printArea").innerHTML=kindsFor(currentReport).map(paginate).join(""); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ if($("tab-reports").classList.contains("active")) renderReport(); });
+window.addEventListener("afterprint",()=>{ setTimeout(()=>{$("printArea").innerHTML="";},500); });
+
+/* =====================================================================
+   PROJECT FILES & TABS
+   ===================================================================== */
+/* ---------- Projects: "My projects" kept in the app, .fsy project files, new project ---------- */
+const FILE_EXT=".fsy", FILE_DESC="Pre-felling Reports project", FILE_MIME="application/x-forest-stock-yield";
+const FILE_MAGIC=[0x46,0x53,0x59,0x50]; // "FSYP"
+var CRC_T=null;
+function crc32(u8){ if(!CRC_T){ CRC_T=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; CRC_T[n]=c>>>0; } }
+  let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+// scrambles the bytes so the file can only be read by this app (applying it twice restores them)
+function maskBytes(u8){ let x=0x5EED1234|0; const out=new Uint8Array(u8.length);
+  for(let i=0;i<u8.length;i++){ x^=x<<13; x^=x>>>17; x^=x<<5; x|=0; out[i]=u8[i]^(x&255); } return out; }
+async function zip8(u8){ if(typeof CompressionStream==="undefined") return null; try{ const st=new Blob([u8]).stream().pipeThrough(new CompressionStream("deflate-raw")); return new Uint8Array(await new Response(st).arrayBuffer()); }catch(e){ return null; } }
+async function unzip8(u8){ const st=new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return new Uint8Array(await new Response(st).arrayBuffer()); }
+function newProjId(){ return "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function defaultProjName(){ const p=state.project; return [p.location,p.extra].map(x=>String(x||"").trim()).filter(Boolean).join(" – ") || "Forest project "+new Date().toLocaleDateString(); }
+function safeFileName(n){ return String(n||"").replace(/[\\\/:*?"<>|\u0000-\u001f]+/g,"_").replace(/\s+/g," ").trim().slice(0,80) || "Forest project"; }
+function projHash(st){ st=st||state; const s=JSON.stringify([st.project,st.settings.minD,st.settings.width,st.settings.n,st.allYield,st.trees.map(t=>[t.stock,t.sp,t.d,t.p,t.y])]);
+  let a=0; for(let i=0;i<s.length;i++) a=(a*31+s.charCodeAt(i))|0; return a+":"+s.length; }
+function isDirty(){ if(!state.meta.id) return state.trees.length>0 || Object.values(state.project).some(v=>String(v||"").trim()!==""); return projHash()!==state.meta.hash; }
+function projSummary(){ return {location:state.project.location, extra:state.project.extra, district:state.project.district, company:state.project.company, trees:state.trees.length, yield:state.trees.filter(isYield).length}; }
+function projectPayload(){
+  return {app:"forest-stock-yield", fileVersion:1, appVersion:APP_VERSION, savedAt:new Date().toISOString(), id:state.meta.id, name:state.meta.name,
+    project:state.project, settings:state.settings, allYield:state.allYield, trees:state.trees, nextId:state.nextId, species:state.species, speciesVersion:state.speciesVersion};
+}
+function updateProjStatus(){
+  const el=document.getElementById("projName"); if(!el) return;
+  const d=isDirty(); const nm=state.meta.name || "New project";
+  el.innerHTML=`📁 ${esc(nm)} <span class="st ${d?"dirty":""}">· ${!state.meta.id?(d?"not saved yet":"empty"):(d?"unsaved changes":"saved")}</span>`;
+  document.title=(state.meta.name?state.meta.name+" – ":"")+"Pre-felling Reports";
+}
+// ---- the .fsy file format: "FSYP" | version | flags | 2 spare | CRC32 | length | scrambled, compressed project ----
+async function encodeProject(obj){
+  const raw=new TextEncoder().encode(JSON.stringify(obj)); const z=await zip8(raw); const body=maskBytes(z||raw);
+  const out=new Uint8Array(16+body.length); const dv=new DataView(out.buffer);
+  out.set(FILE_MAGIC,0); out[4]=1; out[5]=z?1:0; dv.setUint32(8,crc32(raw)); dv.setUint32(12,raw.length); out.set(body,16); return out;
+}
+async function decodeProject(buf){
+  const u8=new Uint8Array(buf);
+  if(u8.length>=16 && FILE_MAGIC.every((b,i)=>u8[i]===b)){
+    if(u8[4]>1) throw new Error("This project was saved by a newer version of the app. Open the app while online so it updates, then try again.");
+    const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength); let raw;
+    try{ const body=maskBytes(u8.subarray(16)); raw=(u8[5]&1)? await unzip8(body) : body; }catch(e){ raw=null; }
+    if(!raw || raw.length!==dv.getUint32(12) || crc32(raw)!==dv.getUint32(8)) throw new Error("This project file is damaged or was changed outside the app, so it can't be opened. Ask for the file to be sent again.");
+    const o=JSON.parse(new TextDecoder().decode(raw)); if(!o.trees||!o.species) throw new Error("This file has no project data."); return o;
+  }
+  const txt=new TextDecoder().decode(u8.subarray(0,Math.min(u8.length,5e6))).replace(/^\uFEFF/,"").trim();
+  if(txt.startsWith("{")){ try{ const o=JSON.parse(txt); if(o.trees&&o.species) return o; }catch(e){} }  // project files from earlier versions (.json)
+  throw new Error(`This is not a ${FILE_DESC} file. Choose a file that ends in ${FILE_EXT}.`);
+}
+// ---- "My projects": stored in the app on this device (IndexedDB) ----
+const LIB={db:null,mode:null,mem:new Map(),p:null};
+function libOpen(){ if(LIB.p) return LIB.p;
+  LIB.p=new Promise(res=>{ try{ const r=indexedDB.open("forest-reports",1);
+    r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains("projects")) r.result.createObjectStore("projects",{keyPath:"id"}); };
+    r.onsuccess=()=>{ LIB.db=r.result; LIB.mode="idb"; res(); }; r.onerror=()=>{ LIB.mode="mem"; res(); }; r.onblocked=()=>{ LIB.mode="mem"; res(); };
+  }catch(e){ LIB.mode="mem"; res(); } }); return LIB.p; }
+function libTx(mode,fn){ return new Promise((res,rej)=>{ let req; const t=LIB.db.transaction("projects",mode); req=fn(t.objectStore("projects"));
+  t.oncomplete=()=>res(req?req.result:undefined); t.onerror=()=>rej(t.error||new Error("Could not save")); t.onabort=()=>rej(t.error||new Error("Storage is full")); }); }
+async function libAll(){ await libOpen(); return LIB.mode==="idb"? (await libTx("readonly",s=>s.getAll())||[]) : [...LIB.mem.values()]; }
+async function libGet(id){ await libOpen(); return LIB.mode==="idb"? await libTx("readonly",s=>s.get(id)) : LIB.mem.get(id); }
+async function libPut(rec){ await libOpen(); if(LIB.mode==="idb") await libTx("readwrite",s=>s.put(rec)); else LIB.mem.set(rec.id,rec); }
+async function libDel(id){ await libOpen(); if(LIB.mode==="idb") await libTx("readwrite",s=>s.delete(id)); else LIB.mem.delete(id); }
+async function storeCurrent(){
+  const now=new Date().toISOString(); let old=null; try{ old=await libGet(state.meta.id); }catch(e){}
+  const data=projectPayload();
+  await libPut({id:state.meta.id,name:state.meta.name,created:old&&old.created||now,modified:now,summary:projSummary(),data});
+  state.meta.hash=projHash(); saveNow(); return data;
+}
+// ---- writing a .fsy file ----
+var fileHandles=new Map();
+function inFrame(){ try{ return window.self!==window.top; }catch(e){ return true; } }
+async function saveFsy(data,name,key){
+  const bytes=await encodeProject(data); const fname=safeFileName(name)+FILE_EXT;
+  if(window.showSaveFilePicker && !inFrame()){
+    try{ let fh=fileHandles.get(key);
+      if(!fh){ fh=await window.showSaveFilePicker({suggestedName:fname, types:[{description:FILE_DESC, accept:{[FILE_MIME]:[FILE_EXT]}}]}); fileHandles.set(key,fh); }
+      const w=await fh.createWritable(); await w.write(bytes); await w.close(); return `file ${fh.name}`;
+    }catch(e){ if(e&&e.name==="AbortError") return null; fileHandles.delete(key); }
+  }
+  const blob=new Blob([bytes],{type:"application/octet-stream"}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500); return `file ${fname} (in your Downloads)`;
+}
+// ---- Save ----
+async function saveDialog(){
+  const already=!!state.meta.id; const def=state.meta.name||defaultProjName(); const wantFile=state.settings.alsoFile!==false;
+  const r=await modal("Save project",`<label class="f" style="font-size:13px">Project name<input type="text" name="pname" value="${esc(def)}" autocomplete="off"></label>
+    <label class="chk" style="margin-top:14px"><input type="checkbox" name="tofile" ${wantFile?"checked":""}> Also save as a <b>${FILE_EXT}</b> project file – to share it, keep a backup or open it on another phone or computer</label>
+    <p class="small muted" style="margin-top:12px">The project is always saved inside the app on this device. You can find it any time under <b>📂 Open project → My projects</b>.${already?" Use <b>Save as a new copy</b> to keep the old version too.":""}</p>`,
+    [{label:"Cancel",value:0}].concat(already?[{label:"Save as a new copy",value:"copy"}]:[]).concat([{label:"💾 Save",value:"save",cls:"primary"}]));
+  if(!r.value) return false;
+  state.settings.alsoFile=!!r.vals.tofile;
+  return await doSave((r.vals.pname||"").trim()||def, r.value==="copy", !!r.vals.tofile);
+}
+async function doSave(name,asCopy,toFile){
+  const prevId=state.meta.id, prevName=state.meta.name;
+  if(asCopy||!state.meta.id) state.meta.id=newProjId();
+  state.meta.name=name;
+  let data; try{ data=await storeCurrent(); }
+  catch(e){ state.meta.id=prevId; state.meta.name=prevName; await modal("Could not save",`<p>The project could not be saved in the app (${esc(e.message||e)}). Your work is still here – try saving it as a ${FILE_EXT} file.</p>`,[{label:"OK",value:1,cls:"primary"}]); return false; }
+  let where="in My projects";
+  if(toFile){ const f=await saveFsy(data,name,state.meta.id); if(f) where+=" and as "+f; }
+  updateProjStatus(); toast(`✔ Saved “${name}” ${where}`,4500);
+  if(LIB.mode==="mem") toast("⚠ This window can't keep projects after it closes. Open the app from its own link, or keep the .fsy file.",7000);
+  return true;
+}
+// ---- before replacing the current project ----
+async function confirmLeave(action){
+  if(!isDirty()) return true;
+  const nm=state.meta.name?`“${esc(state.meta.name)}”`:"this project";
+  const r=await modal("Save changes first?",`<p>${nm} has changes that are not saved. Save them before you ${action}?</p>`,
+    [{label:"Cancel",value:0},{label:"Don't save",value:"no",cls:"danger"},{label:"💾 Save",value:"yes",cls:"primary"}]);
+  if(!r.value) return false; if(r.value==="yes") return await saveDialog(); return true;
+}
+// ---- load a project (from My projects or a file). Your own species list is kept; species you don't have are added ----
+function loadProjectData(obj,id,name){
+  const mine=state.species; const ns=normalize(JSON.parse(JSON.stringify(obj)));
+  const have=new Set(mine.map(x=>x.code.toLowerCase())); const extra=ns.species.filter(x=>x.code&&!have.has(x.code.toLowerCase()));
+  ns.species=mine.concat(extra); ns.meta={id,name,hash:null}; delete ns.app; delete ns.fileVersion; delete ns.appVersion; delete ns.savedAt; delete ns.id; delete ns.name;
+  state=ns; spIdx=null; relinkTrees(); state.meta.hash=projHash(); saveNow();
+  editingId=null; renderAll(); resetEntry(); showTab("data"); return extra.length;
+}
+async function openProjectFile(f,handle){
+  let obj; try{ obj=await decodeProject(await f.arrayBuffer()); }
+  catch(err){ await modal("Can't open this file",`<p>${esc(err.message)}</p>`,[{label:"OK",value:1,cls:"primary"}]); return; }
+  if(!await confirmLeave("open another project")) return;
+  let id=obj.id||null, name=String(obj.name||"").trim()||f.name.replace(/\.[^.]+$/,"")||"Forest project";
+  if(id){ let ex=null; try{ ex=await libGet(id); }catch(e){}
+    if(ex){ const r=await modal("This project is already on this device",`<p>You already have <b>${esc(ex.name)}</b> in My projects (saved ${esc(fmtDate(ex.modified))}). The file was saved ${esc(fmtDate(obj.savedAt))}.</p><p class="small muted">Replace your copy with the file, or keep both.</p>`,
+        [{label:"Cancel",value:0},{label:"Keep both (open as a copy)",value:"copy"},{label:"Replace with the file",value:"replace",cls:"primary"}]);
+      if(!r.value) return; if(r.value==="copy"){ id=null; name+=" (copy)"; } } }
+  if(!id) id=newProjId();
+  const extra=loadProjectData(obj,id,name);
+  try{ await storeCurrent(); }catch(e){}
+  if(handle) fileHandles.set(id,handle);
+  updateProjStatus(); closeProjDialog();
+  toast(`📂 Opened “${name}” – it is now in My projects`+(extra?` · ${extra} new species added to your list`:""),5000);
+}
+async function openSaved(id){
+  let rec=null; try{ rec=await libGet(id); }catch(e){}
+  if(!rec){ toast("That project could not be found"); return; }
+  if(id===state.meta.id && !isDirty()){ closeProjDialog(); toast(`“${rec.name}” is already open`); return; }
+  if(!await confirmLeave("open another project")) return;
+  const extra=loadProjectData(rec.data,rec.id,rec.name); closeProjDialog();
+  toast(`📂 Opened “${rec.name}”`+(extra?` · ${extra} new species added to your list`:""),4000);
+}
+function fmtDate(iso){ if(!iso) return "unknown date"; const d=new Date(iso); if(isNaN(d)) return "unknown date"; return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})+" "+d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}); }
+// ---- the Open project window ----
+var projDlg=null;
+function closeProjDialog(){ if(projDlg){ projDlg.remove(); projDlg=null; } }
+async function openDialog(){
+  closeProjDialog(); await libOpen();
+  const bg=document.createElement("div"); bg.className="modal-bg"; projDlg=bg;
+  bg.innerHTML=`<div class="modal wide"><h3>📂 Open project</h3>
+    ${LIB.mode==="mem"?`<div class="memwarn">This preview window can't keep saved projects. Open the app from its own link (or install it) so My projects is kept.</div>`:""}
+    <div class="projtools"><button class="btn primary" data-act="file">📄 Open a ${FILE_EXT} project file…</button><button class="btn" data-act="new">＋ New project</button><div class="spacer"></div><label class="small muted" style="display:flex;align-items:center;gap:6px">🔍 Search<input type="text" id="projSearch" autocomplete="off" aria-label="Search projects" style="width:180px"></label></div>
+    <div class="small muted" style="margin:4px 0 6px"><b>My projects</b> – saved in this app on this device</div>
+    <div class="projlist" id="projList"><div class="projempty">Loading…</div></div>
+    <div class="btns"><button class="btn" data-act="close">Close</button></div></div>`;
+  document.body.appendChild(bg);
+  const render=async()=>{
+    let list=[]; try{ list=await libAll(); }catch(e){}
+    const q=(bg.querySelector("#projSearch").value||"").trim().toLowerCase();
+    list.sort((a,b)=>String(b.modified).localeCompare(String(a.modified)));
+    const shown=list.filter(r=>!q||(r.name+" "+Object.values(r.summary||{}).join(" ")).toLowerCase().includes(q));
+    bg.querySelector("#projList").innerHTML = shown.map(r=>{ const s=r.summary||{}; const cur=r.id===state.meta.id;
+      const bits=[s.location,s.extra,s.district].filter(x=>String(x||"").trim()).map(esc);
+      return `<div class="projrow ${cur?"cur":""}" data-id="${esc(r.id)}"><div class="pinfo"><div class="pname">${esc(r.name)}${cur?' <span class="tag green">open now</span>':""}</div>
+        <div class="pmeta">${bits.length?bits.join(" · ")+" · ":""}${s.trees||0} trees (${s.yield||0} yield) · saved ${esc(fmtDate(r.modified))}</div></div>
+        <div class="pbtns"><button class="btn sm primary" data-act="open">Open</button><button class="btn sm" data-act="file1" title="Save a ${FILE_EXT} file of this project to share or back up">⬇ ${FILE_EXT} file</button><button class="btn sm" data-act="rename">Rename</button><button class="btn sm danger" data-act="del" title="Delete">✕</button></div></div>`; }).join("")
+      || `<div class="projempty">${list.length?"No projects match your search.":`No saved projects yet. Click <b>💾 Save project</b> to save one here, or open a ${FILE_EXT} file someone sent you.`}</div>`;
+  };
+  bg.querySelector("#projSearch").addEventListener("input",render);
+  bg.addEventListener("click",async e=>{
+    if(e.target===bg){ closeProjDialog(); return; }
+    const b=e.target.closest("[data-act]"); if(!b) return; const act=b.dataset.act; const row=b.closest(".projrow"); const id=row&&row.dataset.id;
+    if(act==="close") closeProjDialog();
+    else if(act==="file") pickProjectFile();
+    else if(act==="new"){ closeProjDialog(); newProject(); }
+    else if(act==="open") openSaved(id);
+    else if(act==="file1"){ const rec=await libGet(id); if(rec){ const f=await saveFsy(rec.data,rec.name,rec.id); if(f) toast(`Saved ${f}`,4000); } }
+    else if(act==="rename"){ const rec=await libGet(id); if(!rec) return; bg.style.display="none";
+      const r=await modal("Rename project",`<label class="f" style="font-size:13px">New name<input type="text" name="pname" value="${esc(rec.name)}" autocomplete="off"></label>`,[{label:"Cancel",value:0},{label:"Rename",value:1,cls:"primary"}]);
+      bg.style.display=""; const nn=r.value&&(r.vals.pname||"").trim();
+      if(nn){ rec.name=nn; rec.data.name=nn; await libPut(rec); if(id===state.meta.id){ state.meta.name=nn; saveNow(); } render(); } }
+    else if(act==="del"){ const rec=await libGet(id); if(!rec) return; bg.style.display="none";
+      const r=await modal("Delete project",`<p>Delete <b>${esc(rec.name)}</b> from My projects on this device? This can't be undone.</p><p class="small muted">Any ${FILE_EXT} files you saved or shared are not affected.</p>`,[{label:"Cancel",value:0},{label:"Delete",value:1,cls:"danger"}]);
+      bg.style.display=""; if(r.value){ await libDel(id); if(id===state.meta.id){ state.meta.id=null; state.meta.hash=null; saveNow(); } toast(`Deleted “${rec.name}”`); render(); } }
+  });
+  render();
+}
+function pickProjectFile(){
+  const inp=$("fileProject"); const mobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(mobile) inp.removeAttribute("accept"); else inp.setAttribute("accept",FILE_EXT+",.json");
+  inp.click();
+}
+$("fileProject").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(f) await openProjectFile(f,null); };
+// ---- New ----
+async function newProject(){
+  if(!await confirmLeave("start a new project")) return;
+  const keep={species:state.species,settings:state.settings};
+  state=freshState(); state.species=keep.species; state.settings=keep.settings; spIdx=null; saveNow();
+  editingId=null; renderAll(); resetEntry(); showTab("data"); updateProjStatus();
+  toast("New project started · your species list and settings are kept",3500); setTimeout(()=>$("pLocation").focus(),50);
+}
+$("btnNew").onclick=newProject;
+$("btnOpen").onclick=openDialog;
+$("btnSave").onclick=saveDialog;
+$("projName").onclick=openDialog;
+document.addEventListener("keydown",e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.altKey) return; const k=e.key.toLowerCase();
+  if(k==="s"){ e.preventDefault(); if(document.querySelector(".modal-bg")) return; if(state.meta.id) doSave(state.meta.name,false,false); else saveDialog(); }
+  else if(k==="o"){ e.preventDefault(); if(!document.querySelector(".modal-bg")) openDialog(); }
+});
+// opening a .fsy file with the installed app (double-click on a computer)
+if("launchQueue" in window){ try{ window.launchQueue.setConsumer(async lp=>{ if(lp.files&&lp.files.length){ const fh=lp.files[0]; await openProjectFile(await fh.getFile(),fh); } }); }catch(e){} }
+function showTab(name){ const b=document.querySelector(`nav.tabs button[data-tab="${name}"]`); if(b && !b.classList.contains("active")) b.click(); }
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.id==="tab-"+b.dataset.tab));
+  if(b.dataset.tab==="reports") renderReport();
+  if(b.dataset.tab==="species") renderSpecies();
+});
+
+function renderAll(){ renderProject(); renderSpecies(); renderTrees(); renderReport(); updateProjStatus(); }
+try{ if(window.self!==window.top){ $("iframeNote").style.display="block"; $("newTabLink").href=location.href; } }catch(e){ $("iframeNote").style.display="block"; }
+/* =====================================================================
+   OFFLINE APP (PWA): install, offline indicator, updates
+   ===================================================================== */
+const APP_VERSION="2026-10-05.6";
+$("appVer").textContent="version "+APP_VERSION;
+function netStatus(){ const on=navigator.onLine; const el=$("netStat"); el.textContent=on?"● Online":"● Offline – still works"; el.classList.toggle("off",!on); }
+window.addEventListener("online",netStatus); window.addEventListener("offline",netStatus); netStatus();
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredInstall=e; $("btnInstall").style.display=""; });
+window.addEventListener("appinstalled",()=>{ $("btnInstall").style.display="none"; toast("App installed. Open it from your home screen or desktop, even offline."); });
+const isStandalone=()=>window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(isIOS && !isStandalone() && location.protocol.startsWith("http")) $("btnInstall").style.display="";
+$("btnInstall").onclick=async()=>{
+  if(deferredInstall){ deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall=null; $("btnInstall").style.display="none"; return; }
+  modal("Install this app",
+    isIOS? `<p>On iPhone/iPad (Safari): tap the <b>Share</b> button <span style="font-size:18px">⎋</span>, then <b>Add to Home Screen</b>.</p>`
+         : `<p>In Chrome or Edge: open the browser menu <b>⋮</b> and choose <b>Install app</b> (or <b>Add to Home screen</b> on Android).</p>`,
+    [{label:"OK",value:1,cls:"primary"}]);
+};
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      reg.addEventListener("updatefound",()=>{ const w=reg.installing; if(!w) return;
+        w.addEventListener("statechange",()=>{ if(w.state==="activated" && hadController) $("updateBar").style.display="flex"; }); });
+      setInterval(()=>reg.update().catch(()=>{}), 60*60*1000);
+    }).catch(()=>{});
+  });
+  var hadController=!!navigator.serviceWorker.controller;
+  $("btnReload").onclick=()=>location.reload();
+}
+
+if(relinkTrees()) save();
+renderAll(); resetEntry();
+</script>
+</body>
+</html>
