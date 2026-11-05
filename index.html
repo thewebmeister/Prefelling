@@ -129,15 +129,19 @@ table.data input[type=text],table.data input[type=number]{padding:4px 6px}
 .page .pfoot{position:absolute;right:12mm;bottom:7mm;font-family:var(--rfont);font-style:italic;font-weight:700;font-size:8.5pt;color:#000}
 /* ---- printed report styles (shared by preview and print) ---- */
 .report{font-family:var(--rfont);color:#000;font-size:10pt;line-height:1.25}
-.report .rtitle{text-align:center;font-weight:700;font-size:13.5pt;line-height:1.35;padding-bottom:8px}
+.report .rtitle{text-align:center;font-weight:700;font-size:13.5pt;line-height:1.35;padding-bottom:8px;text-transform:uppercase}
+.report .rtitle div{font-weight:700}
 .report table.rt{width:100%;border-collapse:collapse;table-layout:fixed}
 .report table.rt th{font-weight:700;font-style:italic;font-size:10.5pt;text-align:center;border:1px solid #000;border-bottom:2.5px solid #000;padding:5px 4px}
 .report table.rt td{padding:6px 6px;border-bottom:.75px solid #6b6b6b;border-left:.75px solid #8a8a8a;vertical-align:middle;overflow-wrap:anywhere}
 .report table.rt td:first-child{border-left:none}
+.report table.rt td.lbl{white-space:nowrap;overflow:visible}
 .report table.rt td.t{text-align:left}
 .report table.rt td.n{text-align:center}
 .report table.rt td.list{text-align:left;font-size:9.5pt}
-.report table.rt tr.sub td,.report table.rt tr.grand td{font-weight:700;font-style:italic;border-left:none;border-top:4px double #000;border-bottom:1.5px solid #000;padding-top:5px;padding-bottom:5px}
+.report table.rt td.list b.cnt{font-weight:700;white-space:nowrap}
+.report table.rt td.tot{font-weight:700}
+.report table.rt tr.sub td,.report table.rt tr.grand td{font-weight:700;font-style:italic;border-top:4px double #000;border-bottom:1.5px solid #000;padding-top:5px;padding-bottom:5px}
 .report table.rt tr.grand td{border-bottom:4px double #000}
 .report table.rt tr{page-break-inside:avoid;break-inside:avoid}
 .report .empty{text-align:center;padding:30px;font-style:italic;color:#555}
@@ -1402,23 +1406,23 @@ function reportParts(kind){
   });
   const gkeys=[...groups.keys()].sort((a,b)=>a==="none"?1:b==="none"?-1:b-a);
   const heading=[R.title,state.project.company,state.project.location,state.project.district,state.project.extra,state.project.series]
-    .filter(x=>x&&x.trim()).map(x=>`<div>${esc(x.trim())}</div>`).join("");
+    .filter(x=>x&&x.trim()).map(x=>`<div><b>${esc(x.trim().toUpperCase())}</b></div>`).join("");
   const wCode=7, wName=14, wTot=7.5, wCls=((100-wCode-wName-wTot)/nC).toFixed(3);
   const c1=nameFirst?wName:wCode, c2=nameFirst?wCode:wName;
   const colg=`<colgroup><col style="width:${c1}%"><col style="width:${c2}%">${classes.map(()=>`<col style="width:${wCls}%">`).join("")}<col style="width:${wTot}%"></colgroup>`;
   const h1=nameFirst?"SPECIES":"abvr", h2=nameFirst?"abvr":"SPECIES";
   const thead=`<thead><tr><th>${h1}</th><th>${h2}</th>${classes.map(c=>`<th>${c.label}</th>`).join("")}<th>Total</th></tr></thead>`;
   const rows=[]; const grand=classes.map(()=>0);
-  const sumRow=(cls,label,arr)=>`<tr class="${cls}"><td colspan="2" class="t">${label}</td>${arr.map(n=>`<td class="n">${n}</td>`).join("")}<td class="n">${arr.reduce((a,b)=>a+b,0)}</td></tr>`;
+  const sumRow=(cls,label,arr)=>`<tr class="${cls}">${nameFirst?`<td class="t lbl">${label}</td><td></td>`:`<td></td><td class="t lbl">${label}</td>`}${arr.map(n=>`<td class="n">${n}</td>`).join("")}<td class="n tot">${arr.reduce((a,b)=>a+b,0)}</td></tr>`;
   gkeys.forEach(g=>{
     const gm=groups.get(g); const sub=classes.map(()=>0);
     [...gm.values()].sort((a,b)=>a.s.code.localeCompare(b.s.code,undefined,{sensitivity:"base"})).forEach(({s,cells})=>{
       let tot=0;
       const tds=cells.map((arr,i)=>{ const n=arr.length; tot+=n; sub[i]+=n;
-        if(R.list) return `<td class="list">${n?arr.sort(cmpStock).map(esc).join(",<wbr>")+" ("+n+")":""}</td>`;
+        if(R.list) return `<td class="list">${n?arr.sort(cmpStock).map(esc).join(",<wbr>")+` <b class="cnt">(${n})</b>`:""}</td>`;
         return `<td class="n">${n}</td>`; }).join("");
       const a=`<td class="t">${esc(s.code)}</td>`, b=`<td class="t">${esc(s.name)}</td>`;
-      rows.push(`<tr>${nameFirst?b+a:a+b}${tds}<td class="n">${tot}</td></tr>`);
+      rows.push(`<tr>${nameFirst?b+a:a+b}${tds}<td class="n tot">${tot}</td></tr>`);
     });
     sub.forEach((n,i)=>grand[i]+=n);
     rows.push(sumRow("sub", g==="none"?"Total (no felling group)":`Total ${g} CM`, sub));
@@ -1698,7 +1702,7 @@ try{ if(window.self!==window.top){ $("iframeNote").style.display="block"; $("new
 /* =====================================================================
    OFFLINE APP (PWA): install, offline indicator, updates
    ===================================================================== */
-const APP_VERSION="2026-10-05.6";
+const APP_VERSION="2026-10-05.7";
 $("appVer").textContent="version "+APP_VERSION;
 function netStatus(){ const on=navigator.onLine; const el=$("netStat"); el.textContent=on?"● Online":"● Offline – still works"; el.classList.toggle("off",!on); }
 window.addEventListener("online",netStatus); window.addEventListener("offline",netStatus); netStatus();
