@@ -217,7 +217,7 @@ kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;
 <header class="app">
   <div>
     <h1>🌳 Pre-felling Reports</h1>
-    <div class="sub">Stock Chart · Proposed Yield · Stock Summary · Yield Summary</div>
+    <div class="sub">Stock Chart · Proposed Yield · Additional Yield · Stock Summary · Yield Summary</div>
   </div>
   <div class="spacer"></div>
   <span class="projname" id="projName" title="Current project – click to see your saved projects"></span>
@@ -354,9 +354,10 @@ kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;
       <div class="rtabs" id="rtabs">
         <button data-r="stockChart" class="active">1. Stock Chart</button>
         <button data-r="proposedYield">2. Proposed Yield</button>
-        <button data-r="stockSummary">3. Stock Summary</button>
-        <button data-r="yieldSummary">4. Yield Summary</button>
-        <button data-r="all">All 4 reports</button>
+        <button data-r="additionalYield">3. Additional Yield</button>
+        <button data-r="stockSummary">4. Stock Summary</button>
+        <button data-r="yieldSummary">5. Yield Summary</button>
+        <button data-r="all">All 5 reports</button>
       </div>
       <div class="spacer"></div>
       <label class="f" style="flex-direction:row;align-items:center;gap:6px">Paper
@@ -366,7 +367,7 @@ kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;
         <select id="colOrder" style="width:auto"><option value="name">Species, Abvr</option><option value="code">Abvr, Species</option></select>
       </label>
       <button class="btn primary" id="btnPrint">🖨 Print / Save as PDF</button>
-      <button class="btn" id="btnPrintAll">🖨 Print all 4</button>
+      <button class="btn" id="btnPrintAll">🖨 Print all 5</button>
     </div>
     <div class="hint" id="reportStatus"></div>
     <div class="hint">To save a PDF, click Print and choose <b>"Save as PDF"</b> as the destination. The layout is set to landscape with page numbers. For best results, set Margins to <b>Default</b> and Scale to <b>100</b>. To hide the browser's date/URL on the page, untick "Headers and footers" under <i>More settings</i>.</div>
@@ -597,6 +598,7 @@ const DEMO = {
 const REPORTS = {
   stockChart:   {title:"Stock Chart",    yield:false, list:true},
   proposedYield:{title:"Proposed Yield", yield:true,  list:true},
+  additionalYield:{title:"Additional Yield", yield:true, list:true},   // same as Proposed Yield, only the title differs
   stockSummary: {title:"Stock Summary",  yield:false, list:false},
   yieldSummary: {title:"Yield Summary",  yield:true,  list:false},
 };
@@ -1702,7 +1704,7 @@ try{ if(window.self!==window.top){ $("iframeNote").style.display="block"; $("new
 /* =====================================================================
    OFFLINE APP (PWA): install, offline indicator, updates
    ===================================================================== */
-const APP_VERSION="2026-10-05.7";
+const APP_VERSION="2026-10-05.8";
 $("appVer").textContent="version "+APP_VERSION;
 function netStatus(){ const on=navigator.onLine; const el=$("netStat"); el.textContent=on?"● Online":"● Offline – still works"; el.classList.toggle("off",!on); }
 window.addEventListener("online",netStatus); window.addEventListener("offline",netStatus); netStatus();

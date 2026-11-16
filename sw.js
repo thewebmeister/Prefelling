@@ -1,6 +1,6 @@
 /* Pre-felling Reports – offline service worker.
    Bump VERSION whenever index.html changes so every device picks up the update. */
-const VERSION = "2026-10-05.7";
+const VERSION = "2026-10-05.8";
 const CACHE = "forest-reports-" + VERSION;
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest",
