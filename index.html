@@ -240,10 +240,10 @@ kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;
   <div class="card">
     <h2>Project details <span class="count">(report heading, in this order – blank ones are skipped)</span></h2>
     <div class="grid g4">
-      <label class="f">Company (optional)<input type="text" id="pCompany" placeholder="e.g. Mbaza Company Limited"></label>
-      <label class="f">Area (Reserve)<input type="text" id="pLocation" placeholder="e.g. Fum Forest Reserve FMU"></label>
       <label class="f">Forest District<input type="text" id="pDistrict" placeholder="e.g. Bekwai Forest District"></label>
+      <label class="f">Forest Reserve / Area<input type="text" id="pLocation" placeholder="e.g. Fum Forest Reserve FMU"></label>
       <label class="f">Compartment (optional)<input type="text" id="pExtra" placeholder="e.g. Compt 21"></label>
+      <label class="f">Company (optional)<input type="text" id="pCompany" placeholder="e.g. Mbaza Company Limited"></label>
       <label class="f">Felling series (optional)<input type="text" id="pSeries" placeholder="e.g. GAP Felling Series"></label>
     </div>
   </div>
@@ -1407,7 +1407,7 @@ function reportParts(kind){
     gm.get(s.code).cells[classIndex(t.d)].push(t.stock);
   });
   const gkeys=[...groups.keys()].sort((a,b)=>a==="none"?1:b==="none"?-1:b-a);
-  const heading=[R.title,state.project.company,state.project.location,state.project.district,state.project.extra,state.project.series]
+  const heading=[R.title,state.project.district,state.project.location,state.project.extra,state.project.company,state.project.series]
     .filter(x=>x&&x.trim()).map(x=>`<div><b>${esc(x.trim().toUpperCase())}</b></div>`).join("");
   const wCode=7, wName=14, wTot=7.5, wCls=((100-wCode-wName-wTot)/nC).toFixed(3);
   const c1=nameFirst?wName:wCode, c2=nameFirst?wCode:wName;
@@ -1704,7 +1704,7 @@ try{ if(window.self!==window.top){ $("iframeNote").style.display="block"; $("new
 /* =====================================================================
    OFFLINE APP (PWA): install, offline indicator, updates
    ===================================================================== */
-const APP_VERSION="2026-10-05.8";
+const APP_VERSION="2026-10-05.9";
 $("appVer").textContent="version "+APP_VERSION;
 function netStatus(){ const on=navigator.onLine; const el=$("netStat"); el.textContent=on?"● Online":"● Offline – still works"; el.classList.toggle("off",!on); }
 window.addEventListener("online",netStatus); window.addEventListener("offline",netStatus); netStatus();
