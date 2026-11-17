@@ -13,6 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pre-felling">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>@page { margin: 0; }</style>
 <style id="pageStyle">@page { size: A4 landscape; margin: 0; }</style>
 <style>
 :root{
@@ -366,11 +367,12 @@ kbd{background:#eef2f0;border:1px solid #cdd5d0;border-radius:4px;padding:0 5px;
       <label class="f" style="flex-direction:row;align-items:center;gap:6px">Columns
         <select id="colOrder" style="width:auto"><option value="name">Species, Abvr</option><option value="code">Abvr, Species</option></select>
       </label>
-      <button class="btn primary" id="btnPrint">🖨 Print / Save as PDF</button>
+      <button class="btn primary" id="btnPdf" title="Makes the PDF inside the app – only the report, no browser date, time, web address or 1/n page numbers">⬇ Download PDF</button>
+      <button class="btn" id="btnPrint">🖨 Print</button>
       <button class="btn" id="btnPrintAll">🖨 Print all 5</button>
     </div>
     <div class="hint" id="reportStatus"></div>
-    <div class="hint">To save a PDF, click Print and choose <b>"Save as PDF"</b> as the destination. The layout is set to landscape with page numbers. For best results, set Margins to <b>Default</b> and Scale to <b>100</b>. To hide the browser's date/URL on the page, untick "Headers and footers" under <i>More settings</i>.</div>
+    <div class="hint"><b>⬇ Download PDF</b> makes the PDF inside the app: it contains only the report pages (with the report's own "Page X of Y") – no date, time, web address or browser page numbers. It downloads the report shown above, or all 5 when <b>All 5 reports</b> is selected. To print on paper, open the downloaded PDF and print it. If you use <b>🖨 Print</b> straight from the browser and still see a date or web address, open <i>More settings</i> in the print window, untick <b>Headers and footers</b> and set Margins to <b>None</b>.</div>
   </div>
   <div class="paperwrap" id="paper-preview"></div>
 </section>
@@ -997,7 +999,7 @@ function renderProject(){
 }
 function applyPaper(){
   const p=state.settings.paper==="letter"?"letter":"A4";
-  $("pageStyle").textContent=`@page { size: ${p} landscape; margin: 0; }`;
+  $("pageStyle").textContent=`@page { size: ${p} landscape; margin: 0 !important; } @page :first { margin: 0 !important; }`;
 }
 
 /* =====================================================================
@@ -1472,7 +1474,70 @@ $("btnPrint").onclick=()=>printReports(kindsFor(currentReport));
 $("btnPrintAll").onclick=()=>printReports(Object.keys(REPORTS));
 window.addEventListener("beforeprint",()=>{ if(!$("printArea").innerHTML.trim()) $("printArea").innerHTML=kindsFor(currentReport).map(paginate).join(""); });
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ if($("tab-reports").classList.contains("active")) renderReport(); });
-window.addEventListener("afterprint",()=>{ setTimeout(()=>{$("printArea").innerHTML="";},500); });
+window.addEventListener("afterprint",()=>{ setTimeout(()=>{$("printArea").innerHTML="";},500); if(printTitle!==null){ document.title=printTitle; printTitle=null; } });
+// while printing, give the browser no page title to stamp on the paper
+var printTitle=null;
+window.addEventListener("beforeprint",()=>{ if(printTitle===null){ printTitle=document.title; document.title="\u200B"; } });
+
+/* ---------- ⬇ Download PDF: the app draws each report page itself, so nothing from the browser is added ---------- */
+function pdfCSS(){ return [...document.querySelectorAll("style")].map(s=>s.textContent).join("\n").replace(/\]\]>/g,""); }
+function loadImage(src){ return new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>rej(new Error("This browser could not draw the page")); im.src=src; }); }
+async function zlibBytes(u8){ if(typeof CompressionStream==="undefined") return null; try{ const st=new Blob([u8]).stream().pipeThrough(new CompressionStream("deflate")); return new Uint8Array(await new Response(st).arrayBuffer()); }catch(e){ return null; } }
+async function drawPage(pageEl,dpi){
+  const w=Math.round(pageEl.offsetWidth), hh=Math.round(pageEl.offsetHeight);
+  const clone=pageEl.cloneNode(true); clone.style.margin="0"; clone.style.boxShadow="none"; clone.style.transform="none";
+  const font=getComputedStyle(document.documentElement).getPropertyValue("--rfont").trim();
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${hh}"><foreignObject x="0" y="0" width="${w}" height="${hh}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;height:${hh}px;background:#fff;--rfont:${esc(font)}"><style><![CDATA[${pdfCSS()}]]></style>${new XMLSerializer().serializeToString(clone)}</div></foreignObject></svg>`;
+  const img=await loadImage("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg));
+  const s=dpi/96, cw=Math.round(w*s), ch=Math.round(hh*s);
+  const c=document.createElement("canvas"); c.width=cw; c.height=ch; const ctx=c.getContext("2d");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,cw,ch); ctx.drawImage(img,0,0,cw,ch);
+  const px=ctx.getImageData(0,0,cw,ch).data; const g=new Uint8Array(cw*ch);
+  for(let i=0,k=0;k<g.length;i+=4,k++) g[k]=(px[i]*299+px[i+1]*587+px[i+2]*114)/1000|0;
+  const z=await zlibBytes(g);
+  if(z) return {w:cw,h:ch,cs:"DeviceGray",filter:"FlateDecode",data:z};
+  const jpg=atob(c.toDataURL("image/jpeg",0.92).split(",")[1]); const u=new Uint8Array(jpg.length); for(let i=0;i<jpg.length;i++) u[i]=jpg.charCodeAt(i);
+  return {w:cw,h:ch,cs:"DeviceRGB",filter:"DCTDecode",data:u};
+}
+function pdfText(s){ let hx="FEFF"; for(const ch of String(s)){ const c=ch.codePointAt(0); if(c<0x10000) hx+=c.toString(16).padStart(4,"0"); } return "<"+hx.toUpperCase()+">"; }
+function buildPdf(imgs,wPt,hPt,title){
+  const enc=new TextEncoder(); const parts=[]; let len=0; const offs=[];
+  const put=x=>{ const b=typeof x==="string"?enc.encode(x):x; parts.push(b); len+=b.length; };
+  const obj=(n,fn)=>{ offs[n]=len; put(n+" 0 obj\n"); fn(); put("\nendobj\n"); };
+  put("%PDF-1.4\n"); put(new Uint8Array([37,226,227,207,211,10]));
+  const n=imgs.length, total=4+n*3;
+  obj(1,()=>put("<</Type/Catalog/Pages 2 0 R>>"));
+  obj(2,()=>put(`<</Type/Pages/Count ${n}/Kids[${imgs.map((_,i)=>(4+i*3)+" 0 R").join(" ")}]>>`));
+  obj(3,()=>put(`<</Title ${pdfText(title)}/Producer ${pdfText("Pre-felling Reports")}/CreationDate (D:${new Date().toISOString().replace(/[-:T]/g,"").slice(0,14)})>>`));
+  imgs.forEach((im,i)=>{ const pn=4+i*3; const cs=`q ${wPt} 0 0 ${hPt} 0 0 cm /Im0 Do Q`;
+    obj(pn,()=>put(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${wPt} ${hPt}]/Resources<</XObject<</Im0 ${pn+1} 0 R>>>>/Contents ${pn+2} 0 R>>`));
+    obj(pn+1,()=>{ put(`<</Type/XObject/Subtype/Image/Width ${im.w}/Height ${im.h}/ColorSpace/${im.cs}/BitsPerComponent 8/Filter/${im.filter}/Length ${im.data.length}>>\nstream\n`); put(im.data); put("\nendstream"); });
+    obj(pn+2,()=>put(`<</Length ${cs.length}>>\nstream\n${cs}\nendstream`)); });
+  const xref=len;
+  put(`xref\n0 ${total}\n0000000000 65535 f \n`+offs.slice(1,total).map(o=>String(o).padStart(10,"0")+" 00000 n \n").join(""));
+  put(`trailer\n<</Size ${total}/Root 1 0 R/Info 3 0 R>>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts,{type:"application/pdf"});
+}
+async function downloadPdf(kinds){
+  const btn=$("btnPdf"); if(btn.disabled) return; const label=btn.textContent; btn.disabled=true; btn.textContent="⏳ Making PDF…";
+  const host=document.createElement("div"); host.style.cssText="position:absolute;left:-40000px;top:0;width:auto";
+  try{
+    applyPaper(); host.innerHTML=kinds.map(paginate).join(""); document.body.appendChild(host);
+    if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+    const pages=[...host.querySelectorAll(".page")]; const dm=paperDims(); const wPt=+(dm.w/25.4*72).toFixed(2), hPt=+(dm.h/25.4*72).toFixed(2);
+    const imgs=[];
+    for(let i=0;i<pages.length;i++){ btn.textContent=`⏳ Page ${i+1} of ${pages.length}…`; imgs.push(await drawPage(pages[i],220)); await new Promise(r=>setTimeout(r,0)); }
+    const what=kinds.length>1?"Reports":REPORTS[kinds[0]].title;
+    const nm=safeFileName((state.meta.name||defaultProjName())+" - "+what);
+    const blob=buildPdf(imgs,wPt,hPt,nm);
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=nm+".pdf"; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+    toast(`⬇ ${nm}.pdf saved (${pages.length} page${pages.length>1?"s":""}) – only the report, nothing added by the browser`,5000);
+  }catch(e){
+    await modal("Could not make the PDF here",`<p>This browser could not build the PDF (${esc(e.message||e)}).</p><p>Use <b>🖨 Print</b> and choose <b>Save as PDF</b> instead. In the print window open <i>More settings</i>, untick <b>Headers and footers</b> and set Margins to <b>None</b>.</p>`,[{label:"OK",value:1,cls:"primary"}]);
+  }finally{ host.remove(); btn.disabled=false; btn.textContent=label; }
+}
+$("btnPdf").onclick=()=>downloadPdf(kindsFor(currentReport));
 
 /* =====================================================================
    PROJECT FILES & TABS
@@ -1704,7 +1769,7 @@ try{ if(window.self!==window.top){ $("iframeNote").style.display="block"; $("new
 /* =====================================================================
    OFFLINE APP (PWA): install, offline indicator, updates
    ===================================================================== */
-const APP_VERSION="2026-10-05.9";
+const APP_VERSION="2026-10-06.1";
 $("appVer").textContent="version "+APP_VERSION;
 function netStatus(){ const on=navigator.onLine; const el=$("netStat"); el.textContent=on?"● Online":"● Offline – still works"; el.classList.toggle("off",!on); }
 window.addEventListener("online",netStatus); window.addEventListener("offline",netStatus); netStatus();
